@@ -1,22 +1,22 @@
 {
   "expo": {
-    "name": "@privy-io/expo-starter",
-    "slug": "expo-starter",
+    "name": "Seekers Hub",
+    "slug": "seekers-hub",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "seekers-hub",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/seekers-hub.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1E1E1E"
     },
     "ios": {
       "usesAppleSignIn": true,
       "supportsTablet": true,
-      "bundleIdentifier": "dev.privy.example",
-      "associatedDomains": ["webcredentials:<your-associated-domain>"],
+      "bundleIdentifier": "com.seekers.hub",
+      "associatedDomains": ["webcredentials:seekers.hub.com"],
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -25,15 +25,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#1E1E1E"
       },
-      "package": "dev.privy.example"
-    },
-    "extra": {
-      "privyAppId": "<your-privy-app-id>",
-      "privyClientId": "<your-privy-app-client-id>",
-      "passkeyAssociatedDomain": "https://<your-associated-domain>"
+      "package": "com.seekers.hub"
     },
     "plugins": [
       "expo-router",
