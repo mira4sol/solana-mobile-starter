@@ -218,7 +218,10 @@ export default function WalletScreen() {
         <View className='flex-row items-center justify-between px-6 py-4'>
           <Text className='text-white text-2xl font-bold'>Wallet</Text>
           <View className='flex-row gap-3'>
-            <TouchableOpacity className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'>
+            <TouchableOpacity
+              onPress={() => router.push('/(modals)/qr-scanner')}
+              className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'
+            >
               <Ionicons name='scan' size={20} color='#6366f1' />
             </TouchableOpacity>
             <TouchableOpacity className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'>

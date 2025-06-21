@@ -163,6 +163,13 @@ export default function VerifyEmailScreen() {
         email,
       })
       console.log('session', session)
+
+      // Save user to Zustand store for offline access
+      if (session) {
+        const { setUser } = require('@/store/authStore').useAuthStore.getState()
+        setUser(session)
+      }
+
       router.replace('/(tabs)')
     } catch (error: any) {
       console.log('error', error?.message)
@@ -234,7 +241,7 @@ export default function VerifyEmailScreen() {
                 onChangeText={(value) => handleTextInput(value, index)}
                 onKeyPress={(e) => handleKeyPress(e, index)}
                 keyboardType='numeric'
-                maxLength={1}
+                maxLength={6}
                 selectTextOnFocus
                 autoComplete='one-time-code'
                 textContentType='oneTimeCode'

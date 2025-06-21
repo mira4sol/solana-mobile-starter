@@ -1,3 +1,4 @@
+import CustomButton from '@/components/ui/CustomButton'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
@@ -302,7 +303,12 @@ export default function SendScreen() {
           </View>
 
           {/* Send Button */}
-          <TouchableOpacity
+          <CustomButton
+            text='Review Transaction'
+            onPress={handleSend}
+            disabled={!recipient || !amount}
+          />
+          {/* <TouchableOpacity
             onPress={handleSend}
             disabled={!recipient || !amount}
             className='active:scale-95 mb-6'
@@ -323,7 +329,7 @@ export default function SendScreen() {
                 Review Transaction
               </Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

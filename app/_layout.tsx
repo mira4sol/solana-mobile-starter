@@ -1,4 +1,5 @@
 import Providers from '@/contexts/Providers'
+import { useNetworkStore } from '@/store/networkStore'
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -8,7 +9,6 @@ import { useFonts } from 'expo-font'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
-
 import { useEffect } from 'react'
 import '../global.css'
 
@@ -22,11 +22,19 @@ export default function RootLayout() {
     Inter_600SemiBold,
   })
 
+  const { initialize: initializeNetwork } = useNetworkStore()
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync()
     }
   }, [loaded])
+
+  // Initialize network monitoring
+  useEffect(() => {
+    const unsubscribe = initializeNetwork()
+    return unsubscribe
+  }, [initializeNetwork])
 
   if (!loaded) {
     // Async font loading only occurs in development.
@@ -36,6 +44,7 @@ export default function RootLayout() {
   return (
     <Providers>
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name='index' />
         <Stack.Screen name='(auth)' />
         <Stack.Screen name='(tabs)' />
         <Stack.Screen name='(modals)' />

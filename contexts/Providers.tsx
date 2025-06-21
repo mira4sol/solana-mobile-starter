@@ -1,5 +1,4 @@
 import { ENV } from '@/constants/Env'
-import { PrivySecureStorageAdapter } from '@/libs/privy-store'
 import { PrivyProvider } from '@privy-io/expo'
 import { PrivyElements } from '@privy-io/expo/ui'
 import { DarkTheme, ThemeProvider } from '@react-navigation/native'
@@ -29,7 +28,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
       <PrivyProvider
         appId={ENV.PRIVY_APP_ID!}
         clientId={ENV.PRIVY_APP_CLIENT_ID!}
-        storage={PrivySecureStorageAdapter}
+        // supportedChains={[{}]}
       >
         <PrivyElements config={{ appearance: { colorScheme: 'dark' } }} />
         <QueryClientProvider client={queryClient}>

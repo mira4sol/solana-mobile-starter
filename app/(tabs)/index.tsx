@@ -253,12 +253,15 @@ export default function HomeScreen() {
             <Text className='text-white text-2xl font-bold'>Seeker</Text>
           </View>
           <View className='flex-row gap-3'>
-            <TouchableOpacity className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'>
+            <TouchableOpacity
+              onPress={() => router.push('/(modals)/qr-scanner')}
+              className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'
+            >
               <Ionicons name='scan' size={20} color='#6366f1' />
             </TouchableOpacity>
-            <TouchableOpacity className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'>
+            {/* <TouchableOpacity className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'>
               <Ionicons name='notifications-outline' size={20} color='white' />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
 

@@ -2,10 +2,8 @@ import CustomButton from '@/components/ui/CustomButton'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import React, { useEffect, useRef } from 'react'
-import { Animated, Dimensions, Text, View } from 'react-native'
+import { Animated, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-const { width, height } = Dimensions.get('window')
 
 export default function WelcomeScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current

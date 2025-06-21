@@ -23,6 +23,7 @@ interface CustomButtonProps {
   iconSize?: number
   iconColor?: string
   style?: ViewStyle
+  children?: React.ReactNode
 }
 
 export default function CustomButton({
@@ -37,6 +38,7 @@ export default function CustomButton({
   iconSize = 20,
   iconColor,
   style,
+  children,
 }: CustomButtonProps) {
   const isDisabled = disabled || loading
 
@@ -88,8 +90,8 @@ export default function CustomButton({
             type === 'secondary' || type === 'dark'
               ? 'text-white'
               : isDisabled
-              ? 'text-gray-500'
-              : 'text-white',
+                ? 'text-gray-500'
+                : 'text-white',
             type === 'dark' ? 'font-medium' : 'text-lg font-semibold'
           )}
         >
@@ -157,6 +159,7 @@ export default function CustomButton({
       style={style}
     >
       {renderContent()}
+      {children}
     </TouchableOpacity>
   )
 }

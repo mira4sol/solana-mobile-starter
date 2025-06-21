@@ -15,15 +15,15 @@ export default function ModalsLayout() {
       <Stack.Screen name='buy-crypto' />
       <Stack.Screen name='nft-detail' />
       <Stack.Screen name='wallet-switcher' />
-      <Stack.Screen name='create-post' />
-      <Stack.Screen name='tip-user' />
+      {/* <Stack.Screen name='create-post' /> */}
+      {/* <Stack.Screen name='tip-user' /> */}
       <Stack.Screen name='post-comments' />
-      <Stack.Screen name='edit-profile' />
+      {/* <Stack.Screen name='edit-profile' /> */}
       <Stack.Screen name='manage-wallets' />
-      <Stack.Screen name='security-settings' />
-      <Stack.Screen name='notification-settings' />
-      <Stack.Screen name='qr-code' />
-      <Stack.Screen name='share-profile' />
+      {/* <Stack.Screen name='security-settings' /> */}
+      {/* <Stack.Screen name='notification-settings' /> */}
+      <Stack.Screen name='qr-scanner' />
+      {/* <Stack.Screen name='share-profile' /> */}
     </Stack>
   )
 }
