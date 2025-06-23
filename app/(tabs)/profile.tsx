@@ -1,5 +1,5 @@
+import { usePrivySync } from '@/hooks/usePrivySync'
 import { Ionicons } from '@expo/vector-icons'
-import { usePrivy } from '@privy-io/expo'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
@@ -107,7 +107,8 @@ const menuSections = [
 
 export default function ProfileScreen() {
   const [preferences, setPreferences] = useState(userData.preferences)
-  const { logout } = usePrivy()
+  // const { logout } = usePrivy()
+  const { logout } = usePrivySync()
 
   const handleMenuAction = (action: string) => {
     switch (action) {

@@ -24,7 +24,6 @@ export const birdEyeRequests = {
     setLoading?: (loading: boolean) => void
   ) => {
     try {
-      console.log('walletAddress', walletAddress)
       const res = await httpRequest(setLoading).get(
         `/wallet/portfolio/${walletAddress}`,
         {

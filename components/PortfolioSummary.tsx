@@ -8,11 +8,9 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useRef, useState } from 'react'
 import { Animated, Text, TouchableOpacity, View } from 'react-native'
 
-interface PortfolioSummaryProps {
-  onWalletSwitch?: () => void
-}
+interface PortfolioSummaryProps {}
 
-export function PortfolioSummary({ onWalletSwitch }: PortfolioSummaryProps) {
+export function PortfolioSummary({}: PortfolioSummaryProps) {
   const { portfolio, isLoading, isRefetching, error } = usePortfolio()
   const { activeWallet } = useAuthStore()
   const [copied, setCopied] = useState(false)
@@ -27,9 +25,50 @@ export function PortfolioSummary({ onWalletSwitch }: PortfolioSummaryProps) {
     })
   }
 
-  const formatTokenCount = (count?: number) => {
-    if (!count) return '0'
-    return count.toString()
+  const calculatePortfolioChange = () => {
+    if (!portfolio?.items || portfolio.items.length === 0) {
+      return { changeValue: 0, changePercent: 0 }
+    }
+
+    let totalChangeValue = 0
+    let totalCurrentValue = 0
+
+    portfolio.items.forEach((item) => {
+      if (item.valueUsd && item.priceChange24h !== undefined) {
+        const currentValue = item.valueUsd
+        const previousValue = currentValue / (1 + item.priceChange24h / 100)
+        const changeValue = currentValue - previousValue
+
+        totalChangeValue += changeValue
+        totalCurrentValue += currentValue
+      }
+    })
+
+    const changePercent =
+      totalCurrentValue > 0
+        ? (totalChangeValue / (totalCurrentValue - totalChangeValue)) * 100
+        : 0
+
+    return { changeValue: totalChangeValue, changePercent }
+  }
+
+  const formatPortfolioChange = () => {
+    const { changeValue, changePercent } = calculatePortfolioChange()
+
+    if (changeValue === 0) return null
+
+    const isPositive = changeValue >= 0
+    const sign = isPositive ? '+' : ''
+    const formattedValue = Math.abs(changeValue).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+    const formattedPercent = Math.abs(changePercent).toFixed(2)
+
+    return {
+      text: `${sign}$${formattedValue} (${sign}${formattedPercent}%)`,
+      isPositive,
+    }
   }
 
   const copyToClipboard = async () => {
@@ -133,7 +172,7 @@ export function PortfolioSummary({ onWalletSwitch }: PortfolioSummaryProps) {
             </Text>
           </View>
           <TouchableOpacity
-            onPress={onWalletSwitch}
+            onPress={() => router.push('/(modals)/wallet-switcher')}
             className='bg-white/20 rounded-full p-2'
           >
             <Ionicons name='swap-horizontal' size={20} color='white' />
@@ -142,17 +181,25 @@ export function PortfolioSummary({ onWalletSwitch }: PortfolioSummaryProps) {
       )} */}
 
       <Text className='text-white/80 text-sm mb-2'>Total Portfolio Value</Text>
-      <Text className='text-white text-3xl font-bold mb-3'>
-        ${formatPortfolioValue(portfolio?.totalUsd)}
-      </Text>
-      {/* <View className='flex-row items-center'>
-        <Text className='text-white/80'>
-          {formatTokenCount(portfolio?.items?.length)} tokens
+      <View className=' mb-3'>
+        <Text className='text-white text-3xl font-bold'>
+          ${formatPortfolioValue(portfolio?.totalUsd)}
         </Text>
-        {isRefetching && (
-          <Text className='text-success-300 ml-2'>• Updating</Text>
-        )}
-      </View> */}
+        {(() => {
+          const change = formatPortfolioChange()
+          if (!change) return null
+
+          return (
+            <Text
+              className={`text-xs font-semibold ${
+                change.isPositive ? 'text-green-400' : 'text-red-400'
+              }`}
+            >
+              {change.text}
+            </Text>
+          )
+        })()}
+      </View>
       {/* <View className='flex-row items-center'>
         <Text className='text-success-300 font-semibold mr-2'>{'+10.58'}</Text>
         <Text className='text-success-300 font-semibold'>({'+2.04%'})</Text>
@@ -167,13 +214,15 @@ export function PortfolioSummary({ onWalletSwitch }: PortfolioSummaryProps) {
           <Text className='text-white/60 text-sm font-mono'>
             {formatWalletAddress(activeWallet?.address)}{' '}
           </Text>
-          <View className=''>
-            <Ionicons
-              name={copied ? 'checkmark-outline' : 'copy-outline'}
-              size={15}
-              color={copied ? '#10b981' : 'rgba(255,255,255,0.6)'}
-            />
-          </View>
+
+          <Ionicons
+            name={copied ? 'checkmark-outline' : 'copy-outline'}
+            size={15}
+            color={copied ? '#10b981' : 'rgba(255,255,255,0.6)'}
+          />
+          {isRefetching && (
+            <Text className='text-green-400 text-xs'>Updating...</Text>
+          )}
         </TouchableOpacity>
       </Animated.View>
     </LinearGradient>

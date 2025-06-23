@@ -137,3 +137,101 @@ export const socialPosts = [
     timeAgo: '4h',
   },
 ]
+
+// Mock data
+export const walletData = {
+  mainWallet: {
+    name: 'Main Wallet',
+    address: '7xKXtg2C...9W8BeFhJ',
+    totalValue: '$12,847.32',
+    isActive: true,
+  },
+  otherWallets: [
+    {
+      name: 'Trading Wallet',
+      address: '9mNcVp4K...2L5HwRsT',
+      totalValue: '$3,245.67',
+      isActive: false,
+    },
+    {
+      name: 'DeFi Wallet',
+      address: '5qRsTu8X...8P3YvBnM',
+      totalValue: '$8,592.14',
+      isActive: false,
+    },
+  ],
+}
+
+export const tokens = [
+  {
+    symbol: 'SOL',
+    name: 'Solana',
+    balance: '45.2',
+    value: '$8,294.40',
+    change: '+5.2%',
+    price: '$183.45',
+    logo: '◉',
+    color: '#14F195',
+  },
+  {
+    symbol: 'USDC',
+    name: 'USD Coin',
+    balance: '2,847.32',
+    value: '$2,847.32',
+    change: '0.0%',
+    price: '$1.00',
+    logo: '●',
+    color: '#2775CA',
+  },
+  {
+    symbol: 'RAY',
+    name: 'Raydium',
+    balance: '156.8',
+    value: '$892.16',
+    change: '+12.4%',
+    price: '$5.69',
+    logo: '⚡',
+    color: '#C200FB',
+  },
+  {
+    symbol: 'BONK',
+    name: 'Bonk',
+    balance: '1,234,567',
+    value: '$813.44',
+    change: '-3.2%',
+    price: '$0.0000658',
+    logo: '🐕',
+    color: '#FF6B35',
+  },
+  {
+    symbol: 'JUP',
+    name: 'Jupiter',
+    balance: '892.45',
+    value: '$598.34',
+    change: '+8.7%',
+    price: '$0.67',
+    logo: '🪐',
+    color: '#FFA500',
+  },
+]
+
+export const nfts = [
+  {
+    name: 'Mad Lads #1234',
+    collection: 'Mad Lads',
+    value: '45 SOL',
+    image: '🦍',
+  },
+  {
+    name: 'SMB #5678',
+    collection: 'Solana Monkey Business',
+    value: '12 SOL',
+    image: '🐵',
+  },
+  {
+    name: 'Okay Bears #9012',
+    collection: 'Okay Bears',
+    value: '8 SOL',
+    image: '🐻',
+  },
+]
