@@ -265,7 +265,7 @@ export default function SocialScreen() {
   )
 
   return (
-    <SafeAreaView className='flex-1 bg-dark-50'>
+    <SafeAreaView className='flex-1 bg-dark-50' edges={['top']}>
       <View className='flex-1'>
         {/* Header */}
         <View className='flex-row items-center justify-between px-6 py-4'>

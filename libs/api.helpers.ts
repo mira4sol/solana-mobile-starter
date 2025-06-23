@@ -1,6 +1,8 @@
+import { Keys } from '@/constants/App'
 import { ENV } from '@/constants/Env'
 import { ApiResponseInterface } from '@/types/api_response'
 import axios, { AxiosRequestHeaders, type AxiosInstance } from 'axios'
+import * as SecureStore from 'expo-secure-store'
 
 export const apiResponse = <D = any>(
   success: boolean,
@@ -14,7 +16,7 @@ export const apiResponse = <D = any>(
   }
 }
 
-export const httpRequest = (token?: string) => {
+export const httpRequest = (setLoading?: (loading: boolean) => void) => {
   // Here we set the base URL for all requests made to the api
   const api: AxiosInstance = axios.create({
     baseURL: ENV.SERVER_URL,
@@ -23,11 +25,9 @@ export const httpRequest = (token?: string) => {
   // We set an interceptor for each request to
   // include Bearer token to the request if user is logged in
   api.interceptors.request.use(async (config) => {
-    /**
-     * If a there is a token present uncomment the comment and implement
-     *
-     */
+    setLoading?.(true)
 
+    const token = await SecureStore.getItemAsync(Keys.PRIVY_ACCESS_TOKEN)
     if (token) {
       config.headers = {
         Authorization: `Bearer ${token}`,
@@ -36,6 +36,23 @@ export const httpRequest = (token?: string) => {
 
     return config
   })
+
+  // This runs before any response is return
+  api.interceptors.response.use(
+    (response) => {
+      // set loading false if isLoading is not null
+      setLoading?.(false)
+
+      return response
+    },
+    (error) => {
+      // set loading false if isLoading is not null
+      setLoading?.(false)
+
+      // throw error
+      return Promise.reject(error)
+    }
+  )
 
   return api
 }

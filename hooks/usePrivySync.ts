@@ -28,7 +28,7 @@ export function usePrivySync() {
       privyUser: !!privyUser,
       privyIsReady,
       userId: privyUser?.id,
-      wallet: privyUser?.linked_accounts,
+      // wallet: privyUser?.linked_accounts,
     })
 
     updateFromPrivy(privyUser, privyIsReady)

@@ -1,11 +1,10 @@
-import { ENV } from '@/constants/Env'
 import axios, { AxiosInstance } from 'axios'
 import { apiResponse } from '../api.helpers'
 
 const api: AxiosInstance = axios.create({
   baseURL: 'https://api.rugcheck.xyz/v1',
   headers: {
-    Authorization: 'Bearer ' + ENV.RUGCHECKER_API_KEY,
+    // Authorization: 'Bearer ' + ENV.RUGCHECKER_API_KEY,
   },
 })
 

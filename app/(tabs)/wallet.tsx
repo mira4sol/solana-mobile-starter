@@ -1,5 +1,12 @@
+import { ActionButton } from '@/components/ActionButton'
+import { NFTCard } from '@/components/NFTCard'
+import { OfflineIndicator } from '@/components/OfflineIndicator'
+import { PortfolioSummary } from '@/components/PortfolioSummary'
+import { TokenCard } from '@/components/TokenCard'
+import { TokenCardSkeleton } from '@/components/TokenCardSkeleton'
+import { usePortfolio } from '@/hooks/usePortfolio'
+import { BirdEyeTokenItem } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
@@ -115,94 +122,19 @@ export default function WalletScreen() {
     'tokens'
   )
   const [refreshing, setRefreshing] = useState(false)
+  const { portfolio, isLoading, isRefetching, error, refetch } = usePortfolio()
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true)
-    setTimeout(() => setRefreshing(false), 2000)
+    try {
+      await refetch()
+    } finally {
+      setRefreshing(false)
+    }
   }
 
-  const TokenCard = ({ token }: any) => (
-    <TouchableOpacity
-      onPress={() => router.push('/(modals)/token-detail')}
-      className='bg-dark-200 rounded-2xl p-4 mb-3 active:scale-98'
-    >
-      <View className='flex-row items-center justify-between'>
-        <View className='flex-row items-center flex-1'>
-          <View className='w-12 h-12 bg-primary-500/20 rounded-full justify-center items-center mr-4'>
-            <Text className='text-lg'>{token.logo}</Text>
-          </View>
-          <View className='flex-1'>
-            <Text className='text-white font-semibold text-lg'>
-              {token.symbol}
-            </Text>
-            <Text className='text-gray-400 text-sm'>{token.name}</Text>
-            <Text className='text-gray-500 text-xs'>
-              {token.balance} {token.symbol}
-            </Text>
-          </View>
-        </View>
-        <View className='items-end'>
-          <Text className='text-white font-semibold text-lg'>
-            {token.value}
-          </Text>
-          <Text
-            className={`text-sm font-medium ${
-              token.change.includes('+')
-                ? 'text-success-400'
-                : 'text-danger-400'
-            }`}
-          >
-            {token.change}
-          </Text>
-          <Text className='text-gray-500 text-xs'>{token.price}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  )
-
-  const NFTCard = ({ nft }: any) => (
-    <TouchableOpacity
-      onPress={() => router.push('/(modals)/nft-detail')}
-      className='bg-dark-200 rounded-2xl p-4 mr-3 w-40 active:scale-95'
-    >
-      <View className='w-full h-32 bg-dark-300 rounded-xl justify-center items-center mb-3'>
-        <Text className='text-4xl'>{nft.image}</Text>
-      </View>
-      <Text className='text-white font-semibold text-sm mb-1' numberOfLines={1}>
-        {nft.name}
-      </Text>
-      <Text className='text-gray-400 text-xs mb-2' numberOfLines={1}>
-        {nft.collection}
-      </Text>
-      <Text className='text-primary-400 font-medium text-sm'>{nft.value}</Text>
-    </TouchableOpacity>
-  )
-
-  const ActionButton = ({ icon, title, onPress, gradient = false }: any) => (
-    <TouchableOpacity onPress={onPress} className='flex-1 active:scale-95'>
-      {gradient ? (
-        <LinearGradient
-          colors={['#6366f1', '#8b5cf6']}
-          style={{
-            borderRadius: 16,
-            padding: 16,
-            alignItems: 'center',
-          }}
-        >
-          <Ionicons name={icon} size={24} color='white' />
-          <Text className='text-white font-medium text-sm'>{title}</Text>
-        </LinearGradient>
-      ) : (
-        <View className='bg-dark-200 rounded-2xl p-4 items-center gap-2'>
-          <Ionicons name={icon} size={24} color='#6366f1' />
-          <Text className='text-white font-medium text-sm'>{title}</Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  )
-
   return (
-    <SafeAreaView className='flex-1 bg-dark-50'>
+    <SafeAreaView className='flex-1 bg-dark-50' edges={['top']}>
       <ScrollView
         className='flex-1'
         showsVerticalScrollIndicator={false}
@@ -230,38 +162,14 @@ export default function WalletScreen() {
           </View>
         </View>
 
+        {/* Offline Indicator */}
+        <OfflineIndicator />
+
         {/* Active Wallet */}
         <View className='px-6 mb-6'>
-          <LinearGradient
-            colors={['#6366f1', '#8b5cf6']}
-            style={{
-              borderRadius: 24,
-              padding: 24,
-            }}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View className='flex-row items-center justify-between mb-4'>
-              <View>
-                <Text className='text-white/80 text-sm'>Active Wallet</Text>
-                <Text className='text-white text-lg font-semibold'>
-                  {walletData.mainWallet.name}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => router.push('/(modals)/wallet-switcher')}
-                className='bg-white/20 rounded-full p-2'
-              >
-                <Ionicons name='swap-horizontal' size={20} color='white' />
-              </TouchableOpacity>
-            </View>
-            <Text className='text-white text-3xl font-bold mb-2'>
-              {walletData.mainWallet.totalValue}
-            </Text>
-            <Text className='text-white/60 text-sm font-mono'>
-              {walletData.mainWallet.address}
-            </Text>
-          </LinearGradient>
+          <PortfolioSummary
+            onWalletSwitch={() => router.push('/(modals)/wallet-switcher')}
+          />
         </View>
 
         {/* Quick Actions */}
@@ -283,7 +191,7 @@ export default function WalletScreen() {
             <ActionButton
               icon='swap-horizontal'
               title='Swap'
-              gradient={true}
+              // gradient={true}
               onPress={() => router.push('/(modals)/swap')}
             />
             <ActionButton
@@ -329,9 +237,39 @@ export default function WalletScreen() {
                   <Text className='text-primary-400 font-medium'>Sort</Text>
                 </TouchableOpacity>
               </View>
-              {tokens.map((token, index) => (
-                <TokenCard key={index} token={token} />
-              ))}
+
+              {isLoading && !portfolio ? (
+                <TokenCardSkeleton count={5} />
+              ) : error ? (
+                <View className='bg-dark-200 rounded-2xl p-6 items-center'>
+                  <Ionicons name='warning-outline' size={48} color='#ef4444' />
+                  <Text className='text-gray-400 text-center mt-4'>
+                    {error}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => refetch()}
+                    className='mt-4 bg-primary-500 rounded-xl px-4 py-2'
+                  >
+                    <Text className='text-white font-medium'>Retry</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : portfolio?.items && portfolio.items.length > 0 ? (
+                portfolio.items.map(
+                  (token: BirdEyeTokenItem, index: number) => (
+                    <TokenCard
+                      key={`${token.address}-${index}`}
+                      token={token}
+                    />
+                  )
+                )
+              ) : (
+                <View className='bg-dark-200 rounded-2xl p-6 items-center'>
+                  <Ionicons name='wallet-outline' size={48} color='#666672' />
+                  <Text className='text-gray-400 text-center mt-4'>
+                    No tokens found in your wallet
+                  </Text>
+                </View>
+              )}
             </View>
           )}
 
@@ -371,7 +309,7 @@ export default function WalletScreen() {
         </View>
 
         {/* Bottom Spacing */}
-        <View className='h-8' />
+        {/* <View className='h-8' /> */}
       </ScrollView>
     </SafeAreaView>
   )

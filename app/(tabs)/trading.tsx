@@ -137,8 +137,8 @@ export default function TradingScreen() {
                   token.risk === 'Low'
                     ? 'bg-success-500/20'
                     : token.risk === 'Medium'
-                    ? 'bg-warning-500/20'
-                    : 'bg-danger-500/20'
+                      ? 'bg-warning-500/20'
+                      : 'bg-danger-500/20'
                 }`}
               >
                 <Text
@@ -146,8 +146,8 @@ export default function TradingScreen() {
                     token.risk === 'Low'
                       ? 'text-success-400'
                       : token.risk === 'Medium'
-                      ? 'text-warning-400'
-                      : 'text-danger-400'
+                        ? 'text-warning-400'
+                        : 'text-danger-400'
                   }`}
                 >
                   {token.risk}
@@ -196,7 +196,7 @@ export default function TradingScreen() {
   )
 
   return (
-    <SafeAreaView className='flex-1 bg-dark-50'>
+    <SafeAreaView className='flex-1 bg-dark-50' edges={['top']}>
       <ScrollView
         className='flex-1'
         showsVerticalScrollIndicator={false}

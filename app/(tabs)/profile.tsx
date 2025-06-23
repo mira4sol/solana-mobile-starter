@@ -183,7 +183,7 @@ export default function ProfileScreen() {
   )
 
   return (
-    <SafeAreaView className='flex-1 bg-dark-50'>
+    <SafeAreaView className='flex-1 bg-dark-50' edges={['top']}>
       <ScrollView className='flex-1' showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className='flex-row items-center justify-between px-6 py-4'>

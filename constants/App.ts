@@ -41,3 +41,99 @@ export const PUBLIC_KEYS = {
     '3AVi9Tg9Uo68tJfuvoKvqKNWKc5wPdSSdeBnizKZ6jT',
   ],
 }
+
+// Mock data
+export const portfolioData = {
+  totalBalance: '12,847.32',
+  dailyChange: '+247.58',
+  dailyChangePercent: '+2.04%',
+  tokens: [
+    {
+      symbol: 'SOL',
+      name: 'Solana',
+      balance: '45.2',
+      value: '$8,294.40',
+      change: '+5.2%',
+      logo: '◉',
+    },
+    {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      balance: '2,847.32',
+      value: '$2,847.32',
+      change: '0.0%',
+      logo: '●',
+    },
+    {
+      symbol: 'RAY',
+      name: 'Raydium',
+      balance: '156.8',
+      value: '$892.16',
+      change: '+12.4%',
+      logo: '⚡',
+    },
+    {
+      symbol: 'BONK',
+      name: 'Bonk',
+      balance: '1,234,567',
+      value: '$813.44',
+      change: '-3.2%',
+      logo: '🐕',
+    },
+  ],
+}
+
+export const trendingTokens = [
+  {
+    symbol: 'WIF',
+    name: 'dogwifhat',
+    price: '$2.84',
+    change: '+23.5%',
+    volume: '$45.2M',
+    logo: '🐕',
+  },
+  {
+    symbol: 'JUP',
+    name: 'Jupiter',
+    price: '$0.67',
+    change: '+18.2%',
+    volume: '$32.1M',
+    logo: '🪐',
+  },
+  {
+    symbol: 'PYTH',
+    name: 'Pyth Network',
+    price: '$0.42',
+    change: '+15.8%',
+    volume: '$28.7M',
+    logo: '🔮',
+  },
+  {
+    symbol: 'HNT',
+    name: 'Helium',
+    price: '$7.23',
+    change: '+12.4%',
+    volume: '$19.8M',
+    logo: '📡',
+  },
+]
+
+export const socialPosts = [
+  {
+    id: 1,
+    user: '@cryptowhale',
+    content: 'SOL looking bullish after breaking $200 resistance! 🚀',
+    likes: 142,
+    tips: 12,
+    timeAgo: '2h',
+  },
+  {
+    id: 2,
+    user: '@defi_trader',
+    content:
+      'New liquidity mining opportunity on Raydium. APY looks interesting 👀',
+    likes: 89,
+    tips: 8,
+    timeAgo: '4h',
+  },
+]
