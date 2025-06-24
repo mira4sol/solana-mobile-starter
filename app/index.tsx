@@ -1,6 +1,5 @@
 import SeekerHubLogo from '@/components/ui/SeekerHubLogo'
-import { useAuth } from '@/hooks/useAuth'
-import { usePrivySync } from '@/hooks/usePrivySync'
+import { useAppState } from '@/hooks/useAppState'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useEffect, useRef } from 'react'
@@ -8,10 +7,7 @@ import { Animated, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Index = () => {
-  const { isLoading, isAuthenticated, user, isReady } = useAuth()
-
-  // Sync Privy with Zustand store
-  usePrivySync()
+  const { user, isAuthenticated, isLoading, isReady } = useAppState()
 
   // Animation values
   const logoScale = useRef(new Animated.Value(1)).current
@@ -77,25 +73,28 @@ const Index = () => {
   }, [dot1Opacity, dot2Opacity, dot3Opacity])
 
   useEffect(() => {
-    console.log('Auth state from Zustand:', {
+    console.log('Auth state from useAppState:', {
       user: !!user,
       isAuthenticated,
       isReady,
+      isLoading,
       userId: user?.id,
     })
 
-    // Only navigate when we have determined the auth state
-    // This could be from Privy (when online) or from local storage (when offline)
-    if (isReady || user) {
+    // Only navigate when we're not loading
+    // This handles both online (Privy ready) and offline (cached data) scenarios
+    if (!isLoading) {
       if (isAuthenticated && user) {
         // User is authenticated (either from Privy or cached), go to main app
+        console.log('User authenticated, navigating to main app')
         router.replace('/(tabs)')
       } else {
-        // User is not authenticated, stay in auth flow
+        // User is not authenticated, go to auth flow
         console.log('User not authenticated, staying in auth flow')
+        router.replace('/(auth)')
       }
     }
-  }, [user, isAuthenticated, isReady])
+  }, [user, isAuthenticated, isLoading])
 
   // Creative Loading Component
   const CreativeLoader = () => (
@@ -138,8 +137,7 @@ const Index = () => {
   )
 
   // Show loading screen while determining auth state
-  // We show loading if we don't have a ready state and no cached user
-  if (!isReady && !user) {
+  if (isLoading) {
     return (
       <SafeAreaView className='flex-1 bg-dark-50'>
         <LinearGradient
