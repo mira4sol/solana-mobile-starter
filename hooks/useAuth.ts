@@ -1,28 +1,41 @@
+import { useAuthStore } from '@/store/authStore'
 import { usePrivy } from '@privy-io/expo'
 import { useMemo } from 'react'
 
 export function useAuth() {
-  const { user, isReady, logout } = usePrivy()
+  const { user: privyUser, isReady, logout: privyLogout } = usePrivy()
+  const { user: cachedUser, isAuthenticated: cachedAuth } = useAuthStore()
 
   const authState = useMemo(() => {
-    if (!isReady) {
+    // If Privy is ready, use Privy's state
+    if (isReady) {
       return {
-        isLoading: true,
-        isAuthenticated: false,
-        user: null,
+        isLoading: false,
+        isAuthenticated: !!privyUser,
+        user: privyUser,
       }
     }
 
-    return {
-      isLoading: false,
-      isAuthenticated: !!user,
-      user,
+    // If Privy is not ready but we have cached auth data, use it for offline mode
+    if (cachedUser && cachedAuth) {
+      return {
+        isLoading: false,
+        isAuthenticated: true,
+        user: cachedUser,
+      }
     }
-  }, [user, isReady])
+
+    // No cached data and Privy not ready - still loading
+    return {
+      isLoading: true,
+      isAuthenticated: false,
+      user: null,
+    }
+  }, [privyUser, isReady, cachedUser, cachedAuth])
 
   return {
     ...authState,
-    logout,
+    logout: privyLogout,
     isReady,
   }
 }
