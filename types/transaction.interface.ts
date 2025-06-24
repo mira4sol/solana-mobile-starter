@@ -10,6 +10,7 @@ export interface Transaction {
   recipientAddress?: string;
   senderAddress?: string;
   fee?: number;
+  logoURI?: string;
 }
 
 export interface TransactionState {

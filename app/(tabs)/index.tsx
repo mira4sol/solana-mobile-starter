@@ -39,6 +39,7 @@ export default function HomeScreen() {
   const {
     transactions,
     isLoading: transactionsLoading,
+    isRefetching: transactionsRefetching,
     error: transactionsError,
     refetch: refetchTransactions,
   } = useTransactions();
@@ -226,13 +227,16 @@ export default function HomeScreen() {
             <Text className="text-white text-xl font-bold">Activity</Text>
             <TouchableOpacity
               onPress={() => {
-                router.push({ pathname: '/wallet', params: { tab: 'history' } });
+                router.push({
+                  pathname: '/wallet',
+                  params: { tab: 'history' },
+                });
               }}
             >
               <Text className="text-primary-400 font-medium">See More</Text>
             </TouchableOpacity>
           </View>
-          {transactionsLoading ? (
+          {transactionsLoading && !transactionsRefetching ? (
             <View className="bg-dark-200 rounded-2xl p-6 items-center">
               <View className="w-full h-16 bg-dark-300 rounded-xl mb-3 animate-pulse" />
               <View className="w-full h-16 bg-dark-300 rounded-xl mb-3 animate-pulse" />
@@ -259,8 +263,8 @@ export default function HomeScreen() {
                   transaction={transaction}
                   onPress={() => {
                     router.push({
-                      pathname: "/(modals)/transaction-details",
-                      params: { transactionId: transaction.id }
+                      pathname: '/(modals)/transaction-details',
+                      params: { transactionId: transaction.id },
                     });
                   }}
                 />
