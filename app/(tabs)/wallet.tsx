@@ -31,6 +31,7 @@ export default function WalletScreen() {
   const {
     transactions,
     isLoading: transactionsLoading,
+    isRefetching: transactionsRefetching,
     error: transactionsError,
     refetch: refetchTransactions,
   } = useTransactions();
@@ -216,7 +217,7 @@ export default function WalletScreen() {
               <Text className="text-white text-lg font-semibold mb-4">
                 Transaction History
               </Text>
-              {transactionsLoading ? (
+              {transactionsLoading && !transactionsRefetching ? (
                 <View className="bg-dark-200 rounded-2xl p-6 items-center">
                   <View className="w-full h-16 bg-dark-300 rounded-xl mb-3 animate-pulse" />
                   <View className="w-full h-16 bg-dark-300 rounded-xl mb-3 animate-pulse" />
@@ -224,7 +225,11 @@ export default function WalletScreen() {
                 </View>
               ) : transactionsError ? (
                 <View className="bg-dark-200 rounded-2xl p-6 items-center">
-                  <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={48}
+                    color="#ef4444"
+                  />
                   <Text className="text-gray-400 text-center mt-4">
                     {transactionsError}
                   </Text>
@@ -240,10 +245,10 @@ export default function WalletScreen() {
                   <TransactionCard
                     key={transaction.id}
                     transaction={transaction}
-                    onPress={() => 
+                    onPress={() =>
                       router.push({
-                        pathname: "/(modals)/transaction-details",
-                        params: { transactionId: transaction.id }
+                        pathname: '/(modals)/transaction-details',
+                        params: { transactionId: transaction.id },
                       })
                     }
                   />

@@ -1,4 +1,3 @@
-import { mockTransactions } from '@/constants/Transactions';
 import { birdEyeRequests } from '@/libs/api_requests/birdeye.request';
 import { useAuthStore } from '@/store/authStore';
 import { useTransactionsStore } from '@/store/transactionsStore';
@@ -14,36 +13,57 @@ const TRANSACTIONS_STORAGE_KEY = 'wallet_transactions_cache';
  * Convert a BirdEye transaction to our app's Transaction format
  */
 const convertBirdEyeTransaction = (tx: BirdEyeTransaction): Transaction => {
-  // Determine the transaction type based on mainAction
-  let type: TransactionType = 'send';
+  // Determine the transaction type based on mainAction and balance changes
+  let type: TransactionType = tx.mainAction as TransactionType;
 
-  switch (tx.mainAction) {
-    case 'send':
-      type = 'send';
-      break;
-    case 'receive':
-      type = 'receive';
-      break;
-    case 'swap':
-      type = 'swap';
-      break;
-    case 'buy':
-      type = 'buy';
-      break;
-    case 'sell':
-      type = 'sell';
-      break;
-    default:
-      // Default to 'send' if mainAction doesn't match
-      type = 'send';
+  // If the type is not valid, determine based on balance changes
+  if (!['send', 'receive', 'swap', 'buy', 'sell'].includes(type)) {
+    // Default to send
+    type = 'send';
   }
 
-  // Get the main token from the balance change
-  const mainToken = tx.balanceChange?.[0] || {
+  // Find the most significant token in the balance changes
+  // This will be used as the main token for the transaction
+  let mainToken = {
     symbol: 'SOL',
     amount: 0,
     decimals: 9,
+    logoURI:
+      'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
   };
+
+  if (tx.balanceChange && tx.balanceChange.length > 0) {
+    // Sort by absolute amount value to find the most significant token change
+    const sortedChanges = [...tx.balanceChange].sort((a, b) => {
+      const absA = Math.abs(a.amount) / Math.pow(10, a.decimals);
+      const absB = Math.abs(b.amount) / Math.pow(10, b.decimals);
+      return absB - absA;
+    });
+
+    // Use the most significant token as the main token
+    mainToken = sortedChanges[0];
+
+    // If mainAction isn't set correctly, try to determine from balance changes
+    if (type === 'send' && mainToken.amount > 0) {
+      type = 'receive';
+    } else if (type === 'receive' && mainToken.amount < 0) {
+      type = 'send';
+    }
+
+    // If there are multiple tokens with significant changes, it might be a swap
+    if (sortedChanges.length > 1) {
+      const firstToken = sortedChanges[0];
+      const secondToken = sortedChanges[1];
+
+      // If one token decreases and another increases, it's likely a swap
+      if (
+        (firstToken.amount < 0 && secondToken.amount > 0) ||
+        (firstToken.amount > 0 && secondToken.amount < 0)
+      ) {
+        type = 'swap';
+      }
+    }
+  }
 
   // Convert timestamp from ISO string to number
   const timestamp = new Date(tx.blockTime).getTime();
@@ -60,6 +80,7 @@ const convertBirdEyeTransaction = (tx: BirdEyeTransaction): Transaction => {
     recipientAddress: tx.to,
     senderAddress: tx.from,
     fee: tx.fee / 1000000000, // Convert lamports to SOL
+    logoURI: mainToken.logoURI, // Include the token logo URI
   };
 };
 
@@ -74,8 +95,7 @@ export const useTransactions = () => {
     setError,
   } = useTransactionsStore();
 
-  // const walletAddress = activeWallet?.address
-  const walletAddress = '66YZZejVBupBnMwSEqTaCkAMwPacpPzP41GSEst55Kgz'; // TODO: Remove this in prod
+  const walletAddress = activeWallet?.address;
 
   // Load cached transactions on initial render to improve UX
   const loadCachedTransactions = async () => {
@@ -139,7 +159,7 @@ export const useTransactions = () => {
       const convertedTransactions =
         response.data.solana && response.data.solana.length > 0
           ? response.data.solana.map(convertBirdEyeTransaction)
-          : mockTransactions; // Fallback to mock data if no transactions are available
+          : [];
 
       // Update the store with the fetched data
       setTransactions(convertedTransactions);

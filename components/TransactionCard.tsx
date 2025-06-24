@@ -1,7 +1,7 @@
 import { Transaction } from '@/types/transaction.interface';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -53,6 +53,19 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
         ? '-'
         : '';
   };
+  
+  const formatAmount = (amount: number) => {
+    // For very small amounts (less than 0.01), show <0.01 instead of scientific notation
+    if (amount > 0 && amount < 0.01) {
+      return '<0.01';
+    }
+    
+    // For regular amounts, format with up to 4 decimal places, removing trailing zeros
+    return amount.toLocaleString('en-US', {
+      maximumFractionDigits: 4,
+      minimumFractionDigits: 0
+    });
+  };
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -74,7 +87,14 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
       onPress={onPress}
     >
       <View className="w-10 h-10 rounded-full bg-dark-300 justify-center items-center mr-3">
-        <Ionicons name={getIconName()} size={20} color={getIconColor()} />
+        {transaction.logoURI ? (
+          <Image
+            source={{ uri: transaction.logoURI }}
+            className="w-6 h-6 rounded-full"
+          />
+        ) : (
+          <Ionicons name={getIconName()} size={20} color={getIconColor()} />
+        )}
       </View>
       <View className="flex-1">
         <View className="flex-row justify-between items-center">
@@ -91,7 +111,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
             }`}
           >
             {getAmountPrefix()}
-            {transaction.amount} {transaction.symbol.split('/')[0]}
+            {formatAmount(transaction.amount)} {transaction.symbol.split('/')[0]}
           </Text>
         </View>
         <View className="flex-row justify-between items-center mt-1">

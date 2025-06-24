@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { formatWalletAddress } from '@privy-io/expo';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'react-native';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -98,6 +99,15 @@ export const TransactionDetailsModal: React.FC<
         : '';
   };
 
+  // Format the amount with full precision for the details view
+  const formatPreciseAmount = (amount: number) => {
+    // For amounts, show with full precision (up to 9 decimal places for SOL)
+    return amount.toLocaleString('en-US', {
+      maximumFractionDigits: 9,
+      minimumFractionDigits: transaction.symbol === 'SOL' ? 9 : 2,
+    });
+  };
+
   // Copy to clipboard with animation and haptic feedback
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -140,7 +150,7 @@ export const TransactionDetailsModal: React.FC<
         title: 'Transaction Details',
         message:
           `Transaction Type: ${formatTransactionType(transaction.type)}\n` +
-          `Amount: ${getAmountPrefix()}${transaction.amount} ${transaction.symbol}\n` +
+          `Amount: ${getAmountPrefix()}${formatPreciseAmount(transaction.amount)} ${transaction.symbol}\n` +
           `Status: ${transaction.status}\n` +
           `Date: ${formatDate(transaction.timestamp)}\n` +
           `View on Solscan: ${explorerUrl}`,
@@ -179,12 +189,20 @@ export const TransactionDetailsModal: React.FC<
             className="w-16 h-16 rounded-full justify-center items-center mb-4"
             style={{ backgroundColor: `${getIconColor()}20` }}
           >
-            <Ionicons name={getIconName()} size={32} color={getIconColor()} />
+            {transaction.logoURI ? (
+              <Image
+                source={{ uri: transaction.logoURI }}
+                className="w-10 h-10 rounded-full"
+              />
+            ) : (
+              <Ionicons name={getIconName()} size={32} color={getIconColor()} />
+            )}
           </View>
 
           <Text className="text-white text-2xl font-bold">
             {getAmountPrefix()}
-            {transaction.amount} {transaction.symbol.split('/')[0]}
+            {formatPreciseAmount(transaction.amount)}{' '}
+            {transaction.symbol.split('/')[0]}
           </Text>
 
           <View className="flex-row items-center mt-2">
