@@ -251,9 +251,14 @@ export const TransactionDetailsModal: React.FC<
 
           <View className="flex-row justify-between py-3 border-b border-dark-300">
             <Text className="text-gray-400">Date</Text>
-            <Text className="text-white font-medium">
-              {formatDate(transaction.timestamp)}
-            </Text>
+            <View className="flex-1 max-w-[70%] flex-row justify-end">
+              <Text
+                className="text-white font-medium text-right"
+                numberOfLines={3}
+              >
+                {formatDate(transaction.timestamp)}
+              </Text>
+            </View>
           </View>
 
           <View className="flex-row justify-between items-center py-3 border-b border-dark-300">
