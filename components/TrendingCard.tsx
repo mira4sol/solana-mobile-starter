@@ -1,29 +1,58 @@
+import { blurHashPlaceholder } from '@/constants/App'
+import { BirdEyeTrendingTokenItem } from '@/types'
+import { Image } from 'expo-image'
 import { router } from 'expo-router'
-import React from 'react'
+import React, { useState } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 
-interface TrendingToken {
-  symbol: string
-  name: string
-  price: string
-  change: string
-  volume: string
-  logo: string
-}
-
 interface TrendingCardProps {
-  token: TrendingToken
+  token: BirdEyeTrendingTokenItem
   onPress?: () => void
 }
 
 export function TrendingCard({ token, onPress }: TrendingCardProps) {
+  const [imageError, setImageError] = useState(false)
+
   const handlePress = () => {
     if (onPress) {
       onPress()
     } else {
-      router.push('/(modals)/token-detail')
+      router.push({
+        pathname: '/(modals)/token-detail',
+        params: {
+          tokenAddress: token.address,
+          symbol: token.symbol,
+          name: token.name,
+        },
+      })
     }
   }
+
+  const formatPrice = (price: number) => {
+    if (price >= 1) {
+      return `$${price.toFixed(2)}`
+    } else {
+      return `$${price.toFixed(6)}`
+    }
+  }
+
+  const formatVolume = (volume: number) => {
+    if (volume >= 1000000) {
+      return `$${(volume / 1000000).toFixed(1)}M`
+    } else if (volume >= 1000) {
+      return `$${(volume / 1000).toFixed(1)}K`
+    } else {
+      return `$${volume.toFixed(0)}`
+    }
+  }
+
+  const formatChange = (change: number | null) => {
+    if (change === null) return '0.0%'
+    const sign = change >= 0 ? '+' : ''
+    return `${sign}${change.toFixed(2)}%`
+  }
+
+  const showImage = token.logoURI && !imageError
 
   return (
     <TouchableOpacity
@@ -31,24 +60,44 @@ export function TrendingCard({ token, onPress }: TrendingCardProps) {
       className='bg-dark-200 rounded-2xl p-4 mr-3 w-48 active:scale-95'
     >
       <View className='flex-row items-center mb-3'>
-        <View className='w-10 h-10 bg-primary-500/20 rounded-full justify-center items-center mr-3'>
-          <Text className='text-sm'>{token.logo}</Text>
+        <View className='w-10 h-10 bg-primary-500/20 rounded-full justify-center items-center mr-3 overflow-hidden'>
+          {showImage ? (
+            <Image
+              source={{ uri: token.logoURI }}
+              style={{ width: 40, height: 40, borderRadius: 20 }}
+              onError={() => setImageError(true)}
+              // resizeMode='cover'
+              placeholder={{ blurhash: blurHashPlaceholder }}
+            />
+          ) : (
+            <Text className='text-sm font-bold text-primary-400'>
+              {token.symbol?.charAt(0) || '?'}
+            </Text>
+          )}
         </View>
         <View className='flex-1'>
           <Text className='text-white font-semibold'>{token.symbol}</Text>
-          <Text className='text-gray-400 text-xs'>{token.name}</Text>
+          <Text className='text-gray-400 text-xs' numberOfLines={1}>
+            {token.name}
+          </Text>
         </View>
       </View>
-      <Text className='text-white font-bold text-lg mb-1'>{token.price}</Text>
+      <Text className='text-white font-bold text-lg mb-1'>
+        {formatPrice(token.price)}
+      </Text>
       <View className='flex-row justify-between'>
         <Text
           className={`text-sm font-medium ${
-            token.change.includes('+') ? 'text-success-400' : 'text-danger-400'
+            (token.price24hChangePercent || 0) >= 0
+              ? 'text-success-400'
+              : 'text-danger-400'
           }`}
         >
-          {token.change}
+          {formatChange(token.price24hChangePercent)}
         </Text>
-        <Text className='text-gray-400 text-xs'>{token.volume}</Text>
+        <Text className='text-gray-400 text-xs'>
+          {formatVolume(token.volume24hUSD)}
+        </Text>
       </View>
     </TouchableOpacity>
   )

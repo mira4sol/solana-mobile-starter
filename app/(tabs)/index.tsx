@@ -5,8 +5,10 @@ import { SocialCard } from '@/components/SocialCard'
 import { TokenCard } from '@/components/TokenCard'
 import { TokenCardSkeleton } from '@/components/TokenCardSkeleton'
 import { TrendingCard } from '@/components/TrendingCard'
-import { socialPosts, trendingTokens } from '@/constants/App'
+import { TrendingCardSkeleton } from '@/components/TrendingCardSkeleton'
+import { socialPosts } from '@/constants/App'
 import { usePortfolio } from '@/hooks/usePortfolio'
+import { useTrending } from '@/hooks/useTrending'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
@@ -26,11 +28,17 @@ const { width } = Dimensions.get('window')
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const { portfolio, isLoading, isRefetching, error, refetch } = usePortfolio()
+  const {
+    trending,
+    isLoading: trendingLoading,
+    error: trendingError,
+    refetch: refetchTrending,
+  } = useTrending()
 
   const onRefresh = async () => {
     setRefreshing(true)
     try {
-      await refetch()
+      await Promise.all([refetch(), refetchTrending()])
     } finally {
       setRefreshing(false)
     }
@@ -152,13 +160,56 @@ export default function HomeScreen() {
               <Text className='text-primary-400 font-medium'>See More</Text>
             </TouchableOpacity>
           </View>
-          <FlatList
-            data={trendingTokens}
-            renderItem={({ item }) => <TrendingCard token={item} />}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 24 }}
-          />
+          {trendingLoading && !trending ? (
+            <FlatList
+              data={[]}
+              renderItem={() => null}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 24 }}
+              ListEmptyComponent={<TrendingCardSkeleton count={3} />}
+            />
+          ) : trendingError ? (
+            <View className='px-6'>
+              <View className='bg-dark-200 rounded-2xl p-6 items-center'>
+                <Ionicons
+                  name='trending-down-outline'
+                  size={48}
+                  color='#ef4444'
+                />
+                <Text className='text-gray-400 text-center mt-4'>
+                  {trendingError}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => refetchTrending()}
+                  className='mt-4 bg-primary-500 rounded-xl px-4 py-2'
+                >
+                  <Text className='text-white font-medium'>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : trending?.tokens && trending.tokens.length > 0 ? (
+            <FlatList
+              data={trending.tokens.slice(0, 5)}
+              renderItem={({ item }) => <TrendingCard token={item} />}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 24 }}
+            />
+          ) : (
+            <View className='px-6'>
+              <View className='bg-dark-200 rounded-2xl p-6 items-center'>
+                <Ionicons
+                  name='trending-up-outline'
+                  size={48}
+                  color='#666672'
+                />
+                <Text className='text-gray-400 text-center mt-4'>
+                  No trending tokens available
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Social Feed */}
