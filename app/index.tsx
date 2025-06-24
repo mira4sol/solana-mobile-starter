@@ -3,7 +3,7 @@ import { useAppState } from '@/hooks/useAppState'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useEffect, useRef } from 'react'
-import { Animated, View } from 'react-native'
+import { Animated, InteractionManager, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Index = () => {
@@ -84,15 +84,18 @@ const Index = () => {
     // Only navigate when we're not loading
     // This handles both online (Privy ready) and offline (cached data) scenarios
     if (!isLoading) {
-      if (isAuthenticated && user) {
-        // User is authenticated (either from Privy or cached), go to main app
-        console.log('User authenticated, navigating to main app')
-        router.replace('/(tabs)')
-      } else {
-        // User is not authenticated, go to auth flow
-        console.log('User not authenticated, staying in auth flow')
-        router.replace('/(auth)')
-      }
+      // Use InteractionManager to ensure navigation happens after the component is fully mounted
+      InteractionManager.runAfterInteractions(() => {
+        if (isAuthenticated && user) {
+          // User is authenticated (either from Privy or cached), go to main app
+          console.log('User authenticated, navigating to main app')
+          router.replace('/(tabs)')
+        } else {
+          // User is not authenticated, go to auth flow
+          console.log('User not authenticated, staying in auth flow')
+          router.replace('/(auth)')
+        }
+      })
     }
   }, [user, isAuthenticated, isLoading])
 
