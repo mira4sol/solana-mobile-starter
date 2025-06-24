@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import React, { useState } from 'react'
 import {
   Dimensions,
@@ -48,6 +48,7 @@ const timeFrames = ['1H', '1D', '1W', '1M', '1Y', 'ALL']
 
 export default function TokenDetailScreen() {
   const [activeTimeFrame, setActiveTimeFrame] = useState('1D')
+  const { tokenAddress } = useLocalSearchParams<{ tokenAddress: string }>()
 
   const ActionButton = ({ icon, title, onPress, color = '#6366f1' }: any) => (
     <TouchableOpacity
@@ -119,8 +120,8 @@ export default function TokenDetailScreen() {
                   tokenData.metrics.risk === 'Low'
                     ? 'bg-success-500/20'
                     : tokenData.metrics.risk === 'Medium'
-                    ? 'bg-warning-500/20'
-                    : 'bg-danger-500/20'
+                      ? 'bg-warning-500/20'
+                      : 'bg-danger-500/20'
                 }`}
               >
                 <Text
@@ -128,8 +129,8 @@ export default function TokenDetailScreen() {
                     tokenData.metrics.risk === 'Low'
                       ? 'text-success-400'
                       : tokenData.metrics.risk === 'Medium'
-                      ? 'text-warning-400'
-                      : 'text-danger-400'
+                        ? 'text-warning-400'
+                        : 'text-danger-400'
                   }`}
                 >
                   {tokenData.metrics.risk} Risk
