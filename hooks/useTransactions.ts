@@ -95,8 +95,7 @@ export const useTransactions = () => {
     setError,
   } = useTransactionsStore();
 
-  // const walletAddress = activeWallet?.address
-  const walletAddress = 'GTqcfB8sfSnyuFnQrbLEGS8QVg9DpszdZL7epScfD1FG'; // TODO: Remove this in prod
+  const walletAddress = activeWallet?.address;
 
   // Load cached transactions on initial render to improve UX
   const loadCachedTransactions = async () => {
