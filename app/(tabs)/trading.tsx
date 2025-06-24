@@ -196,7 +196,7 @@ export default function TradingScreen() {
             </View> */}
 
             {/* Trending Categories */}
-            <View className='mb-6'>
+            {/* <View className='mb-6'>
               <View className='flex-row items-center justify-between mb-4'>
                 <Text className='text-white text-xl font-bold'>
                   Trending Categories
@@ -212,7 +212,7 @@ export default function TradingScreen() {
                 showsHorizontalScrollIndicator={false}
                 // contentContainerStyle={{ paddingHorizontal: 24 }}
               />
-            </View>
+            </View> */}
 
             {/* Sort Options */}
             <View className='mb-4'>

@@ -1,4 +1,5 @@
 import { blurHashPlaceholder } from '@/constants/App'
+import { formatPriceChange, formatValue } from '@/libs/string.helpers'
 import { BirdEyeTrendingTokenItem } from '@/types'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
@@ -34,22 +35,6 @@ export function TrendingCard({ token, onPress }: TrendingCardProps) {
     } else {
       return `$${price.toFixed(6)}`
     }
-  }
-
-  const formatVolume = (volume: number) => {
-    if (volume >= 1000000) {
-      return `$${(volume / 1000000).toFixed(1)}M`
-    } else if (volume >= 1000) {
-      return `$${(volume / 1000).toFixed(1)}K`
-    } else {
-      return `$${volume.toFixed(0)}`
-    }
-  }
-
-  const formatChange = (change: number | null) => {
-    if (change === null) return '0.0%'
-    const sign = change >= 0 ? '+' : ''
-    return `${sign}${change.toFixed(2)}%`
   }
 
   const showImage = token.logoURI && !imageError
@@ -93,10 +78,10 @@ export function TrendingCard({ token, onPress }: TrendingCardProps) {
               : 'text-danger-400'
           }`}
         >
-          {formatChange(token.price24hChangePercent)}
+          {formatPriceChange(token.price24hChangePercent)}
         </Text>
         <Text className='text-gray-400 text-xs'>
-          {formatVolume(token.volume24hUSD)}
+          {formatValue(token.volume24hUSD)}
         </Text>
       </View>
     </TouchableOpacity>
