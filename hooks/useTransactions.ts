@@ -3,11 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useTransactionsStore } from '@/store/transactionsStore';
 import { BirdEyeTransaction } from '@/types';
 import { Transaction, TransactionType } from '@/types/transaction.interface';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
-
-// Storage key for caching transaction data
-const TRANSACTIONS_STORAGE_KEY = 'wallet_transactions_cache';
 
 /**
  * Convert a BirdEye transaction to our app's Transaction format
@@ -97,33 +93,6 @@ export const useTransactions = () => {
 
   const walletAddress = activeWallet?.address;
 
-  // Load cached transactions on initial render to improve UX
-  const loadCachedTransactions = async () => {
-    try {
-      const cachedData = await AsyncStorage.getItem(TRANSACTIONS_STORAGE_KEY);
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        setTransactions(parsedData);
-      }
-    } catch (err) {
-      console.error('Error loading cached transactions:', err);
-    }
-  };
-
-  // Cache limited number of transactions for offline access
-  const cacheTransactions = async (data: Transaction[]) => {
-    try {
-      // Only cache the most recent 25 transactions to avoid excessive storage
-      const limitedData = data.slice(0, 25);
-      await AsyncStorage.setItem(
-        TRANSACTIONS_STORAGE_KEY,
-        JSON.stringify(limitedData)
-      );
-    } catch (err) {
-      console.error('Error caching transactions:', err);
-    }
-  };
-
   const {
     data,
     error,
@@ -140,9 +109,6 @@ export const useTransactions = () => {
 
       setLoading(true);
       setError(null);
-
-      // Try to use cached data first for better UX
-      await loadCachedTransactions();
 
       const response = await birdEyeRequests.walletHistory(
         walletAddress,
@@ -164,9 +130,6 @@ export const useTransactions = () => {
       // Update the store with the fetched data
       setTransactions(convertedTransactions);
 
-      // Cache transactions for offline access
-      cacheTransactions(convertedTransactions);
-
       return convertedTransactions;
     },
     enabled: !!walletAddress,
@@ -186,7 +149,7 @@ export const useTransactions = () => {
   }
 
   return {
-    transactions: data || storeTransactions, // Use fresh data if available, fallback to stored data
+    transactions: data && !isError ? data : storeTransactions, // Use fresh data if available, fallback to stored data
     isLoading: queryLoading || storeLoading,
     isRefetching,
     error: errorMessage,

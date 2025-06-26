@@ -91,7 +91,6 @@ export default function TabLayout() {
       <Tabs.Screen
         name='social'
         options={{
-          // title: 'Social',
           title: 'Feed',
           tabBarIcon: ({ color, focused }) => (
             <View

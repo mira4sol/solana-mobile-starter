@@ -1,33 +1,36 @@
-import { Transaction } from '@/types/transaction.interface';
+import { DasApiAssetList } from '@metaplex-foundation/digital-asset-standard-api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-interface TransactionsState {
-  transactions: Transaction[];
+interface AssetsState {
+  // Assets data
+  assets?: DasApiAssetList;
   isLoading: boolean;
   lastFetch: number | null;
   error: string | null;
-  setTransactions: (transactions: Transaction[]) => void;
+
+  // Actions
+  setAssets: (assets: DasApiAssetList) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  clearTransactions: () => void;
+  clearAssets: () => void;
   updateLastFetch: () => void;
 }
 
-export const useTransactionsStore = create<TransactionsState>()(
+export const useAssetsStore = create<AssetsState>()(
   persist(
     (set, get) => ({
       // Initial state
-      transactions: [],
+      assets: undefined,
       isLoading: false,
       lastFetch: null,
       error: null,
 
       // Actions
-      setTransactions: (transactions) => {
+      setAssets: (assets) => {
         set({
-          transactions,
+          assets,
           error: null,
           lastFetch: Date.now(),
         });
@@ -41,9 +44,13 @@ export const useTransactionsStore = create<TransactionsState>()(
         set({ error, isLoading: false });
       },
 
-      clearTransactions: () => {
+      clearAssets: () => {
         set({
-          transactions: [],
+          assets: {
+            items: [],
+            limit: 50,
+            total: 0,
+          } as DasApiAssetList,
           error: null,
           lastFetch: null,
         });
@@ -54,11 +61,12 @@ export const useTransactionsStore = create<TransactionsState>()(
       },
     }),
     {
-      name: 'transactions-storage',
+      name: 'assets-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      // Persist transactions data and last fetch time for offline support
+      // Persist assets data and last fetch time for offline support
+      // Limit to 25 assets to prevent excessive storage
       partialize: (state) => ({
-        transactions: state.transactions?.slice(0, 25) || [], // Limit to 25 most recent transactions
+        assets: state.assets?.items?.slice(0, 25) || [],
         lastFetch: state.lastFetch,
       }),
     }
