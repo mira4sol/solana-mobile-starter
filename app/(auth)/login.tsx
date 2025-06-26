@@ -49,7 +49,7 @@ export default function LoginScreen() {
       if (error instanceof z.ZodError) {
         setError(error.errors[0].message)
       } else {
-        console.log(error)
+        console.log('login error', error)
         Alert.alert(
           'Error',
           'Failed to send verification code. Please try again.'

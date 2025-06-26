@@ -39,6 +39,7 @@ export function useTokenOverview(tokenAddress: string) {
     refetch,
     isRefetching,
     isError,
+    isFetching,
   } = useQuery({
     queryKey: ['tokenOverview', tokenAddress],
     queryFn: async (): Promise<BirdEyeTokenOverviewResponse> => {
@@ -46,13 +47,17 @@ export function useTokenOverview(tokenAddress: string) {
         throw new Error('No token address provided')
       }
 
-      setTokenLoading(tokenAddress, true)
+      // Only set loading for initial loads, not for background refetches
+      const storedToken = getToken(tokenAddress)
+      if (!storedToken) {
+        setTokenLoading(tokenAddress, true)
+      }
       setTokenError(tokenAddress, null)
 
       const response = await birdEyeRequests.tokenOverview(tokenAddress, {
         includeLineChart: false,
         includeOHLCV: false,
-        setLoading: (loading) => setTokenLoading(tokenAddress, loading),
+        setLoading: undefined, // Don't use the API's loading state for UI
       })
 
       if (!response.success || !response.data) {
@@ -61,6 +66,7 @@ export function useTokenOverview(tokenAddress: string) {
 
       // Update the store with the fetched data
       setToken(tokenAddress, response.data)
+      setTokenLoading(tokenAddress, false)
       return response.data
     },
     enabled: !!tokenAddress && isOnline,
@@ -86,11 +92,12 @@ export function useTokenOverview(tokenAddress: string) {
 
   if (hasError && errorMessage) {
     setTokenError(tokenAddress, errorMessage)
+    setTokenLoading(tokenAddress, false) // Clear loading state on error
   }
 
-  // Determine what data to return
+  // Determine what data to return - only show loading for initial loads
   const tokenData = data || storedToken
-  const loading = queryLoading || isStoreLoading
+  const loading = (queryLoading && !tokenData) || (isStoreLoading && !tokenData)
 
   // If offline and no stored data, show offline error
   const showOfflineError = !isOnline && !tokenData && !loading
