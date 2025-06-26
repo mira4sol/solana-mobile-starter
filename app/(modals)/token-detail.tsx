@@ -1,8 +1,13 @@
+import { blurHashPlaceholder } from '@/constants/App'
+import { useTokenOverview } from '@/hooks/useTokenOverview'
+import { formatPercentage, formatValue } from '@/libs/string.helpers'
 import { Ionicons } from '@expo/vector-icons'
+import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useState } from 'react'
 import {
+  ActivityIndicator,
   Dimensions,
   ScrollView,
   Text,
@@ -13,42 +18,107 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 const { width } = Dimensions.get('window')
 
-// Mock token data
-const tokenData = {
-  symbol: 'SOL',
-  name: 'Solana',
-  price: '$183.45',
-  change24h: '+5.2%',
-  change24hValue: '+$9.12',
-  marketCap: '$87.3B',
-  volume24h: '$1.2B',
-  supply: '476.2M SOL',
-  maxSupply: '∞',
-  holders: '1.2M',
-  logo: '◉',
-  description:
-    'Solana is a high-performance blockchain supporting builders around the world creating crypto apps that scale today. Solana ensures composability between ecosystem projects by maintaining a single global state.',
-  userHolding: {
-    amount: '45.2 SOL',
-    value: '$8,294.40',
-    avgBuyPrice: '$165.23',
-    pnl: '+$823.12',
-    pnlPercent: '+11.02%',
-  },
-  metrics: {
-    allTimeHigh: '$259.96',
-    allTimeLow: '$0.50',
-    risk: 'Low',
-    liquidity: 'High',
-    volatility: 'Medium',
-  },
-}
-
 const timeFrames = ['1H', '1D', '1W', '1M', '1Y', 'ALL']
 
 export default function TokenDetailScreen() {
   const [activeTimeFrame, setActiveTimeFrame] = useState('1D')
+  const [imageError, setImageError] = useState(false)
   const { tokenAddress } = useLocalSearchParams<{ tokenAddress: string }>()
+
+  const {
+    token,
+    userHolding,
+    isLoading,
+    error,
+    refetch,
+    showOfflineError,
+    isOnline,
+  } = useTokenOverview(tokenAddress || '')
+
+  // If loading, show loading screen
+  if (isLoading) {
+    return (
+      <SafeAreaView className='flex-1 bg-dark-50'>
+        <View className='flex-1 justify-center items-center'>
+          <ActivityIndicator size='large' color='#6366f1' />
+          <Text className='text-white mt-4 text-lg'>Loading token data...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  // If error and no token data, show error screen
+  if (error && !token) {
+    return (
+      <SafeAreaView className='flex-1 bg-dark-50'>
+        <View className='flex-1'>
+          {/* Header */}
+          <View className='flex-row items-center justify-between px-6 py-4'>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'
+            >
+              <Ionicons name='arrow-back' size={20} color='white' />
+            </TouchableOpacity>
+            <Text className='text-white text-lg font-semibold'>Token</Text>
+            <View className='w-10' />
+          </View>
+
+          <View className='flex-1 justify-center items-center px-6'>
+            <Ionicons name='cloud-offline' size={64} color='#6b7280' />
+            <Text className='text-white text-xl font-semibold mt-4 text-center'>
+              {showOfflineError
+                ? 'No Internet Connection'
+                : 'Error Loading Token'}
+            </Text>
+            <Text className='text-gray-400 text-center mt-2 mb-6'>{error}</Text>
+            <TouchableOpacity
+              onPress={() => refetch()}
+              className='bg-primary-500 px-6 py-3 rounded-2xl'
+            >
+              <Text className='text-white font-semibold'>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  if (!token) {
+    return (
+      <SafeAreaView className='flex-1 bg-dark-50'>
+        <View className='flex-1 justify-center items-center'>
+          <Text className='text-white text-lg'>Token not found</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  const tokenOverview = token.tokenOverview
+  const imageUri = tokenOverview.logoURI
+  const showImage = imageUri && !imageError
+
+  // Calculate price change values
+  const priceChange24h = tokenOverview.priceChange24hPercent || 0
+  const priceChange24hValue = tokenOverview.price * (priceChange24h / 100)
+
+  // Determine risk level based on liquidity and market cap
+  const getRiskLevel = () => {
+    if (
+      tokenOverview.liquidity > 1000000 &&
+      tokenOverview.marketCap > 100000000
+    ) {
+      return 'Low'
+    } else if (
+      tokenOverview.liquidity > 100000 &&
+      tokenOverview.marketCap > 10000000
+    ) {
+      return 'Medium'
+    }
+    return 'High'
+  }
+
+  const riskLevel = getRiskLevel()
 
   const ActionButton = ({ icon, title, onPress, color = '#6366f1' }: any) => (
     <TouchableOpacity
@@ -88,7 +158,7 @@ export default function TokenDetailScreen() {
             <Ionicons name='arrow-back' size={20} color='white' />
           </TouchableOpacity>
           <Text className='text-white text-lg font-semibold'>
-            {tokenData.symbol}
+            {tokenOverview.symbol}
           </Text>
           <View className='flex-row gap-3'>
             <TouchableOpacity className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'>
@@ -104,36 +174,47 @@ export default function TokenDetailScreen() {
           {/* Token Info */}
           <View className='px-6 mb-6'>
             <View className='flex-row items-center mb-4'>
-              <View className='w-16 h-16 bg-primary-500/20 rounded-full justify-center items-center mr-4'>
-                <Text className='text-2xl'>{tokenData.logo}</Text>
+              <View className='w-16 h-16 bg-primary-500/20 rounded-full justify-center items-center mr-4 overflow-hidden'>
+                {showImage ? (
+                  <Image
+                    source={{ uri: imageUri }}
+                    style={{ width: 64, height: 64, borderRadius: 32 }}
+                    onError={() => setImageError(true)}
+                    placeholder={{ blurhash: blurHashPlaceholder }}
+                  />
+                ) : (
+                  <Text className='text-2xl font-bold text-primary-400'>
+                    {tokenOverview.symbol?.charAt(0) || '?'}
+                  </Text>
+                )}
               </View>
               <View className='flex-1'>
                 <Text className='text-white text-2xl font-bold'>
-                  {tokenData.name}
+                  {tokenOverview.name}
                 </Text>
                 <Text className='text-gray-400 text-lg'>
-                  {tokenData.symbol}
+                  {tokenOverview.symbol}
                 </Text>
               </View>
               <View
                 className={`px-3 py-1 rounded-xl ${
-                  tokenData.metrics.risk === 'Low'
+                  riskLevel === 'Low'
                     ? 'bg-success-500/20'
-                    : tokenData.metrics.risk === 'Medium'
+                    : riskLevel === 'Medium'
                       ? 'bg-warning-500/20'
                       : 'bg-danger-500/20'
                 }`}
               >
                 <Text
                   className={`text-sm font-medium ${
-                    tokenData.metrics.risk === 'Low'
+                    riskLevel === 'Low'
                       ? 'text-success-400'
-                      : tokenData.metrics.risk === 'Medium'
+                      : riskLevel === 'Medium'
                         ? 'text-warning-400'
                         : 'text-danger-400'
                   }`}
                 >
-                  {tokenData.metrics.risk} Risk
+                  {riskLevel} Risk
                 </Text>
               </View>
             </View>
@@ -141,33 +222,35 @@ export default function TokenDetailScreen() {
             {/* Price */}
             <View className='mb-4'>
               <Text className='text-white text-4xl font-bold'>
-                {tokenData.price}
+                ${tokenOverview.price.toFixed(tokenOverview.price >= 1 ? 2 : 6)}
               </Text>
               <View className='flex-row items-center'>
                 <Text
                   className={`text-lg font-semibold mr-2 ${
-                    tokenData.change24h.includes('+')
-                      ? 'text-success-400'
-                      : 'text-danger-400'
+                    priceChange24h >= 0 ? 'text-success-400' : 'text-danger-400'
                   }`}
                 >
-                  {tokenData.change24h}
+                  {formatPercentage(priceChange24h)}
                 </Text>
                 <Text
                   className={`text-lg ${
-                    tokenData.change24hValue.includes('+')
+                    priceChange24hValue >= 0
                       ? 'text-success-400'
                       : 'text-danger-400'
                   }`}
                 >
-                  ({tokenData.change24hValue})
+                  (${priceChange24hValue >= 0 ? '+' : ''}
+                  {Math.abs(priceChange24hValue).toFixed(
+                    tokenOverview.price >= 1 ? 2 : 6
+                  )}
+                  )
                 </Text>
               </View>
             </View>
           </View>
 
           {/* Your Holdings */}
-          {tokenData.userHolding && (
+          {userHolding && (
             <View className='px-6 mb-6'>
               <LinearGradient
                 colors={['#6366f1', '#8b5cf6']}
@@ -182,27 +265,36 @@ export default function TokenDetailScreen() {
                   Your Holdings
                 </Text>
                 <Text className='text-white text-2xl font-bold mb-1'>
-                  {tokenData.userHolding.value}
+                  ${formatValue(userHolding.valueUsd)}
                 </Text>
-                <Text className='text-white/80 text-lg mb-4'>
-                  {tokenData.userHolding.amount}
+                <Text className='text-white/80 text-lg'>
+                  {/* <Text className='text-white/80 text-lg mb-4'> */}
+                  {formatValue(userHolding.uiAmount)} {userHolding.symbol}
                 </Text>
-                <View className='flex-row justify-between'>
+                <View className='flex-row justify-between hidden'>
                   <View>
-                    <Text className='text-white/60 text-sm'>Avg Buy Price</Text>
+                    <Text className='text-white/60 text-sm'>Current Price</Text>
                     <Text className='text-white font-semibold'>
-                      {tokenData.userHolding.avgBuyPrice}
+                      $
+                      {tokenOverview.price.toFixed(
+                        tokenOverview.price >= 1 ? 2 : 6
+                      )}
                     </Text>
                   </View>
-                  <View className='items-end'>
-                    <Text className='text-white/60 text-sm'>P&L</Text>
-                    <Text className='text-success-300 font-semibold'>
-                      {tokenData.userHolding.pnl}
-                    </Text>
-                    <Text className='text-success-300 text-sm'>
-                      ({tokenData.userHolding.pnlPercent})
-                    </Text>
-                  </View>
+                  {userHolding.priceChange24h !== undefined && (
+                    <View className='items-end'>
+                      <Text className='text-white/60 text-sm'>24h Change</Text>
+                      <Text
+                        className={`font-semibold ${
+                          userHolding.priceChange24h >= 0
+                            ? 'text-success-300'
+                            : 'text-danger-300'
+                        }`}
+                      >
+                        {formatPercentage(userHolding.priceChange24h)}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </LinearGradient>
             </View>
@@ -250,13 +342,13 @@ export default function TokenDetailScreen() {
                 icon='arrow-up'
                 title='Sell'
                 color='#ef4444'
-                onPress={() => router.push('/(modals)/sell')}
+                onPress={() => router.push('/(modals)/send')}
               />
               <ActionButton
                 icon='arrow-down'
                 title='Buy'
                 color='#10b981'
-                onPress={() => router.push('/(modals)/buy')}
+                onPress={() => router.push('/(modals)/buy-crypto')}
               />
               <ActionButton
                 icon='swap-horizontal'
@@ -278,31 +370,43 @@ export default function TokenDetailScreen() {
             </Text>
             <View className='gap-3'>
               <View className='flex-row'>
-                <MetricCard label='Market Cap' value={tokenData.marketCap} />
-                <MetricCard label='24h Volume' value={tokenData.volume24h} />
+                <MetricCard
+                  label='Market Cap'
+                  value={'$' + formatValue(tokenOverview.marketCap)}
+                />
+                <MetricCard
+                  label='24h Volume'
+                  value={'$' + formatValue(tokenOverview.v24hUSD)}
+                />
               </View>
               <View className='flex-row'>
                 <MetricCard
                   label='Circulating Supply'
-                  value={tokenData.supply}
+                  value={formatValue(tokenOverview.circulatingSupply)}
                 />
-                <MetricCard label='Max Supply' value={tokenData.maxSupply} />
+                <MetricCard
+                  label='Total Supply'
+                  value={formatValue(tokenOverview.totalSupply)}
+                />
               </View>
               <View className='flex-row'>
                 <MetricCard
-                  label='All Time High'
-                  value={tokenData.metrics.allTimeHigh}
+                  label='FDV'
+                  value={'$' + formatValue(tokenOverview.fdv)}
                 />
-                <MetricCard
-                  label='All Time Low'
-                  value={tokenData.metrics.allTimeLow}
-                />
-              </View>
-              <View className='flex-row'>
-                <MetricCard label='Holders' value={tokenData.holders} />
                 <MetricCard
                   label='Liquidity'
-                  value={tokenData.metrics.liquidity}
+                  value={'$' + formatValue(tokenOverview.liquidity)}
+                />
+              </View>
+              <View className='flex-row'>
+                <MetricCard
+                  label='Holders'
+                  value={formatValue(tokenOverview.holder)}
+                />
+                <MetricCard
+                  label='24h Trades'
+                  value={'$' + formatValue(tokenOverview.trade24h)}
                 />
               </View>
             </View>
@@ -311,12 +415,23 @@ export default function TokenDetailScreen() {
           {/* About */}
           <View className='px-6 mb-8'>
             <Text className='text-white text-lg font-semibold mb-4'>
-              About {tokenData.name}
+              About {tokenOverview.name}
             </Text>
             <View className='bg-dark-200 rounded-2xl p-4'>
               <Text className='text-gray-300 leading-6'>
-                {tokenData.description}
+                {tokenOverview.extensions?.description ||
+                  `${tokenOverview.name} (${tokenOverview.symbol}) is a cryptocurrency token. Market cap: ${formatValue(tokenOverview.marketCap) + tokenOverview.symbol}, Liquidity: ${formatValue(tokenOverview.liquidity) + tokenOverview.symbol}.`}
               </Text>
+              {tokenOverview.extensions?.website && (
+                <Text className='text-primary-400 mt-2'>
+                  Website: {tokenOverview.extensions.website}
+                </Text>
+              )}
+              {tokenOverview.extensions?.twitter && (
+                <Text className='text-primary-400 mt-1'>
+                  Twitter: {tokenOverview.extensions.twitter}
+                </Text>
+              )}
             </View>
           </View>
         </ScrollView>
