@@ -176,6 +176,12 @@ export interface BirdEyeHistoricalPriceResponse {
   items: BirdEyeHistoricalPriceItem[]
 }
 
+export interface BirdEyeTokenOverviewResponse {
+  tokenOverview: BirdEyeTokenOverview
+  ohlcv?: BirdEyeTokenOHLCV
+  lineChart?: BirdEyeHistoricalPriceResponse
+}
+
 export interface BirdEyeTokenOverview {
   address: string
   decimals: number

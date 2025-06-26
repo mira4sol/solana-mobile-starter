@@ -87,7 +87,7 @@ export function TokenCard({
         </View>
         <View className='items-end'>
           <Text className='text-white font-semibold text-lg'>
-            {formatValue(token.valueUsd)}
+            ${formatValue(token.valueUsd)}
           </Text>
           {token.priceChange24h !== undefined && (
             <Text
