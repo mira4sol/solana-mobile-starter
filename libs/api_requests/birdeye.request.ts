@@ -7,8 +7,8 @@ import {
   BirdEyeTrendingTokens,
   BirdEyeWalletPortfolio,
   BirdEyeWalletTransactionHistory,
-} from '@/types'
-import { apiResponse, httpRequest } from '../api.helpers'
+} from '@/types';
+import { apiResponse, httpRequest } from '../api.helpers';
 
 export const birdEyeRequests = {
   /**
@@ -31,20 +31,20 @@ export const birdEyeRequests = {
             includePriceChange,
           },
         }
-      )
+      );
 
       return apiResponse<BirdEyeWalletPortfolio>(
         true,
         'Fetched wallet portfolio',
         res.data
-      )
+      );
     } catch (err: any) {
-      console.log('Error fetching wallet portfolio:', err?.response?.data)
+      console.log('Error fetching wallet portfolio:', err?.response?.data);
       return apiResponse<BirdEyeWalletPortfolio>(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         undefined
-      )
+      );
     }
   },
 
@@ -60,23 +60,23 @@ export const birdEyeRequests = {
     try {
       const res = await httpRequest(setLoading).get(
         `/wallet/history/${walletAddress}`
-      )
+      );
 
       return apiResponse<BirdEyeWalletTransactionHistory>(
         true,
         'Fetched wallet transaction history',
         res.data
-      )
+      );
     } catch (err: any) {
       console.log(
         'Error fetching wallet transaction history:',
         err?.response?.data
-      )
+      );
       return apiResponse<BirdEyeWalletTransactionHistory>(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         undefined
-      )
+      );
     }
   },
 
@@ -95,9 +95,9 @@ export const birdEyeRequests = {
       includeOHLCV,
       setLoading,
     }: {
-      includeLineChart?: boolean
-      includeOHLCV?: boolean
-      setLoading?: (loading: boolean) => void
+      includeLineChart?: boolean;
+      includeOHLCV?: boolean;
+      setLoading?: (loading: boolean) => void;
     }
   ) => {
     try {
@@ -109,20 +109,20 @@ export const birdEyeRequests = {
             includeOHLCV,
           },
         }
-      )
+      );
 
       return apiResponse<BirdEyeTokenOverviewResponse>(
         true,
         'Fetched token overview',
         res.data
-      )
+      );
     } catch (err: any) {
-      console.log('Error fetching token overview:', err?.response?.data)
+      console.log('Error fetching token overview:', err?.response?.data);
       return apiResponse<BirdEyeTokenOverviewResponse>(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         undefined
-      )
+      );
     }
   },
 
@@ -135,11 +135,11 @@ export const birdEyeRequests = {
       address_type,
       setLoading,
     }: {
-      type?: BirdEyeTimePeriod
-      time_from?: number
-      time_to?: number
-      address_type?: 'token' | 'pair'
-      setLoading?: (loading: boolean) => void
+      type?: BirdEyeTimePeriod;
+      time_from?: number;
+      time_to?: number;
+      address_type?: 'token' | 'pair';
+      setLoading?: (loading: boolean) => void;
     }
   ) => {
     try {
@@ -153,20 +153,20 @@ export const birdEyeRequests = {
             address_type,
           },
         }
-      )
+      );
 
       return apiResponse<BirdEyeHistoricalPriceResponse>(
         true,
         'Fetched historical price',
         res.data
-      )
+      );
     } catch (err: any) {
-      console.log('Error fetching historical price:', err?.response?.data)
+      console.log('Error fetching historical price:', err?.response?.data);
       return apiResponse<BirdEyeHistoricalPriceResponse>(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         undefined
-      )
+      );
     }
   },
 
@@ -178,10 +178,10 @@ export const birdEyeRequests = {
       time_to,
       setLoading,
     }: {
-      type?: BirdEyeTimePeriod
-      time_from?: number
-      time_to?: number
-      setLoading?: (loading: boolean) => void
+      type?: BirdEyeTimePeriod;
+      time_from?: number;
+      time_to?: number;
+      setLoading?: (loading: boolean) => void;
     }
   ) => {
     try {
@@ -194,20 +194,20 @@ export const birdEyeRequests = {
             time_to,
           },
         }
-      )
+      );
 
       return apiResponse<BirdEyeTokenOHLCV>(
         true,
         'Fetched token OHLCV',
         res.data
-      )
+      );
     } catch (err: any) {
-      console.log('Error fetching token OHLCV:', err?.response?.data)
+      console.log('Error fetching token OHLCV:', err?.response?.data);
       return apiResponse<BirdEyeTokenOHLCV>(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         undefined
-      )
+      );
     }
   },
 
@@ -223,20 +223,20 @@ export const birdEyeRequests = {
         params: {
           keyword,
         },
-      })
+      });
 
       return apiResponse<BirdEyeSearchResponse>(
         true,
         'Fetched search results',
         res.data
-      )
+      );
     } catch (err: any) {
-      console.log('Error fetching token report:', err?.response?.data)
+      console.log('Error fetching token report:', err?.response?.data);
       return apiResponse<BirdEyeSearchResponse>(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         undefined
-      )
+      );
     }
   },
 
@@ -247,11 +247,11 @@ export const birdEyeRequests = {
     limit = 20,
     setLoading,
   }: {
-    sort_by?: 'rank' | 'volume24hUSD' | 'liquidity'
-    sort_type?: 'asc' | 'desc'
-    offset?: number
-    limit?: number
-    setLoading?: (loading: boolean) => void
+    sort_by?: 'rank' | 'volume24hUSD' | 'liquidity';
+    sort_type?: 'asc' | 'desc';
+    offset?: number;
+    limit?: number;
+    setLoading?: (loading: boolean) => void;
   }) => {
     try {
       const res = await httpRequest(setLoading).get(`/token/trending`, {
@@ -261,20 +261,20 @@ export const birdEyeRequests = {
           offset,
           limit,
         },
-      })
+      });
 
       return apiResponse<BirdEyeTrendingTokens>(
         true,
         'Fetched trending tokens',
         res.data
-      )
+      );
     } catch (err: any) {
-      console.log('Error fetching token report:', err?.response?.data)
+      console.log('Error fetching token report:', err?.response?.data);
       return apiResponse<BirdEyeTrendingTokens>(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         undefined
-      )
+      );
     }
   },
-}
+};

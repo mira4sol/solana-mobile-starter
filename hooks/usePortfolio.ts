@@ -1,11 +1,11 @@
-import { birdEyeRequests } from '@/libs/api_requests/birdeye.request'
-import { useAuthStore } from '@/store/authStore'
-import { usePortfolioStore } from '@/store/portfolioStore'
-import { BirdEyeWalletPortfolio } from '@/types'
-import { useQuery } from '@tanstack/react-query'
+import { birdEyeRequests } from '@/libs/api_requests/birdeye.request';
+import { useAuthStore } from '@/store/authStore';
+import { usePortfolioStore } from '@/store/portfolioStore';
+import { BirdEyeWalletPortfolio } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 
 export function usePortfolio() {
-  const { activeWallet } = useAuthStore()
+  const { activeWallet } = useAuthStore();
   const {
     portfolio,
     isLoading: storeLoading,
@@ -13,9 +13,9 @@ export function usePortfolio() {
     setPortfolio,
     setLoading,
     setError,
-  } = usePortfolioStore()
+  } = usePortfolioStore();
 
-  const walletAddress = activeWallet?.address
+  const walletAddress = activeWallet?.address;
   // const walletAddress = '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9'
 
   const {
@@ -29,25 +29,25 @@ export function usePortfolio() {
     queryKey: ['portfolio', walletAddress],
     queryFn: async (): Promise<BirdEyeWalletPortfolio> => {
       if (!walletAddress) {
-        throw new Error('No wallet address available')
+        throw new Error('No wallet address available');
       }
 
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       const response = await birdEyeRequests.walletPortfolio(
         walletAddress,
         true, // includePriceChange
         setLoading
-      )
+      );
 
       if (!response.success || !response.data) {
-        throw new Error(response.message || 'Failed to fetch portfolio')
+        throw new Error(response.message || 'Failed to fetch portfolio');
       }
 
       // Update the store with the fetched data
-      setPortfolio(response.data)
-      return response.data
+      setPortfolio(response.data);
+      return response.data;
     },
     enabled: !!walletAddress,
     staleTime: 30 * 1000, // 30 seconds
@@ -55,14 +55,14 @@ export function usePortfolio() {
     refetchIntervalInBackground: false,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  })
+  });
 
   // Handle errors
-  const hasError = isError || !!storeError
-  const errorMessage = error?.message || storeError
+  const hasError = isError || !!storeError;
+  const errorMessage = error?.message || storeError;
 
   if (hasError && errorMessage) {
-    setError(errorMessage)
+    setError(errorMessage);
   }
 
   return {
@@ -72,5 +72,5 @@ export function usePortfolio() {
     error: errorMessage,
     refetch,
     hasWallet: !!walletAddress,
-  }
+  };
 }

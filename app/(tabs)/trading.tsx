@@ -5,6 +5,7 @@ import { BirdEyeTrendingTokenItem } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
+import { router } from 'expo-router'
 import {
   FlatList,
   RefreshControl,
@@ -101,7 +102,14 @@ export default function TradingScreen() {
   )
 
   const renderToken = ({ item }: { item: BirdEyeTrendingTokenItem }) => (
-    <TokenCard key={item.address} token={convertToken(item)} mc />
+    <TouchableOpacity
+      onPress={() => router.push({
+        pathname: '/(modals)/swap',
+        params: { tokenAddress: item.address }
+      })}
+    >
+      <TokenCard key={item.address} token={convertToken(item)} mc />
+    </TouchableOpacity>
   )
 
   const renderFooter = () => {

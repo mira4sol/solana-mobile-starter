@@ -1,16 +1,14 @@
-import { Keypair, VersionedTransaction } from '@solana/web3.js'
-import axios, { AxiosInstance } from 'axios'
-import { Buffer } from 'buffer'
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import {
   JupiterExecuteOrderResponse,
   JupiterOrderRequest,
   JupiterQuoteOrderResponse,
-} from '../../types'
-import { apiResponse } from '../api.helpers'
+} from '../../types';
+import { apiResponse } from '../api.helpers';
 
 const api: AxiosInstance = axios.create({
   baseURL: 'https://lite-api.jup.ag/ultra/v1',
-})
+});
 
 export const jupiterRequests = {
   getOrder: async (params: JupiterOrderRequest) => {
@@ -24,50 +22,49 @@ export const jupiterRequests = {
           referralAccount: params.referralAccount,
           referralFee: params.referralFee,
         },
-      })
+      });
 
-      return apiResponse(true, 'Fetched Jupiter order quote', res.data)
+      return apiResponse(true, 'Fetched Jupiter order quote', res.data);
     } catch (err: any) {
-      console.log('Error fetching Jupiter order quote:', err?.response?.data)
+      console.log('Error fetching Jupiter order quote:', err?.response?.data);
+      if (err instanceof AxiosError) {
+        console.log('WEEEE', err?.response);
+      }
       return apiResponse(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         err
-      )
+      );
     }
   },
 
   executeOrder: async (
     orderResponse: JupiterQuoteOrderResponse,
-    wallet: Keypair
+    signTransaction: (transaction: Buffer) => Promise<string>
   ) => {
     try {
       // Deserialize the transaction
-      const transaction = VersionedTransaction.deserialize(
-        Buffer.from(orderResponse.transaction, 'base64')
-      )
-
-      // Sign the transaction
-      transaction.sign([wallet])
-
-      // Serialize the transaction to base64 format
-      const signedTransaction = Buffer.from(transaction.serialize()).toString(
+      const transactionBuffer = Buffer.from(
+        orderResponse.transaction,
         'base64'
-      )
+      );
+
+      // Request wallet to sign the transaction
+      const signedTransaction = await signTransaction(transactionBuffer);
 
       const res = await api.post<JupiterExecuteOrderResponse>('/execute', {
         signedTransaction,
         requestId: orderResponse.requestId,
-      })
+      });
 
-      return apiResponse(true, 'Order executed successfully', res.data)
+      return apiResponse(true, 'Order executed successfully', res.data);
     } catch (err: any) {
-      console.log('Error executing Jupiter order:', err?.response?.data)
+      console.log('Error executing Jupiter order:', err?.response?.data);
       return apiResponse(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         err
-      )
+      );
     }
   },
-}
+};
