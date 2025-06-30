@@ -28,7 +28,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
       <PrivyProvider
         appId={ENV.PRIVY_APP_ID!}
         clientId={ENV.PRIVY_APP_CLIENT_ID!}
-        // supportedChains={[{}]}
+        // supportedChains={[]}
       >
         <PrivyElements config={{ appearance: { colorScheme: 'dark' } }} />
         <QueryClientProvider client={queryClient}>

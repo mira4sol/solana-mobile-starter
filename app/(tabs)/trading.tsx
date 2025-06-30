@@ -3,12 +3,12 @@ import { TokenCardSkeleton } from '@/components/TokenCardSkeleton'
 import { useTrendingInfinite } from '@/hooks/useTrending'
 import { BirdEyeTrendingTokenItem } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
   FlatList,
   RefreshControl,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native'
@@ -154,16 +154,15 @@ export default function TradingScreen() {
 
             {/* Search */}
             <View className='mb-6'>
-              <View className='bg-dark-200 rounded-2xl px-4 py-3 flex-row items-center'>
+              <TouchableOpacity
+                className='bg-dark-200 rounded-2xl px-4 py-3 flex-row items-center'
+                onPress={() => router.push('/(modals)/search')}
+              >
                 <Ionicons name='search' size={20} color='#666672' />
-                <TextInput
-                  className='flex-1 text-white ml-3 text-lg'
-                  placeholder='Search tokens...'
-                  placeholderTextColor='#666672'
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-              </View>
+                <Text className='flex-1 text-gray-400 ml-3 text-lg'>
+                  Search tokens...
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Time Frames */}

@@ -1,8 +1,7 @@
-// entrypoint.js
+import { Buffer } from 'buffer'
+import 'react-native-get-random-values'
 
-// Import required polyfills first
-// IMPORTANT: These polyfills must be installed in this order
-import "react-native-get-random-values";
-import "@ethersproject/shims";
+global.Buffer = Buffer
+
 // Then import the expo router
-import "expo-router/entry";
+import 'expo-router/entry'
