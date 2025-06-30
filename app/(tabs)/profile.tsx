@@ -64,6 +64,11 @@ const menuSections = [
         title: 'Manage Wallets',
         action: 'manage-wallets',
       },
+      {
+        icon: 'people-outline',
+        title: 'Address Book',
+        action: 'address-book',
+      },
       { icon: 'key-outline', title: 'Backup & Recovery', action: 'backup' },
       {
         icon: 'settings-outline',
@@ -117,6 +122,9 @@ export default function ProfileScreen() {
         break
       case 'manage-wallets':
         router.push('/(modals)/manage-wallets')
+        break
+      case 'address-book':
+        router.push({pathname: '/(modals)/address-book' as any})
         break
       case 'security':
         router.push('/(modals)/security-settings')
