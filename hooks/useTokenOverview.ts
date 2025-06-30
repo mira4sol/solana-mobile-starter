@@ -55,8 +55,6 @@ export function useTokenOverview(tokenAddress: string) {
       setTokenError(tokenAddress, null)
 
       const response = await birdEyeRequests.tokenOverview(tokenAddress, {
-        includeLineChart: false,
-        includeOHLCV: false,
         setLoading: undefined, // Don't use the API's loading state for UI
       })
 

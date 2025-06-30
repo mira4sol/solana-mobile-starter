@@ -1,7 +1,7 @@
+import { SocialCard } from '@/components/core/home/SocialCard'
 import { OfflineIndicator } from '@/components/OfflineIndicator'
 import { PortfolioSummary } from '@/components/PortfolioSummary'
 import { QuickActionButton } from '@/components/QuickActionButton'
-import { SocialCard } from '@/components/SocialCard'
 import { TokenCard } from '@/components/TokenCard'
 import { TokenCardSkeleton } from '@/components/TokenCardSkeleton'
 import { TransactionCard } from '@/components/TransactionCard'
@@ -77,14 +77,17 @@ export default function HomeScreen() {
               onPress={() => router.push('/(modals)/search')}
               className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'
             >
-              <Ionicons name='search' size={20} color='#6366f1' />
+              <Ionicons name='search' size={20} color='white' />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push('/(modals)/qr-scanner')}
               className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'
             >
-              <Ionicons name='scan' size={20} color='#6366f1' />
+              <Ionicons name='scan' size={20} color='white' />
             </TouchableOpacity>
+            {/* <TouchableOpacity className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'>
+              <Ionicons name='person' size={20} color='white' />
+            </TouchableOpacity> */}
             {/* <TouchableOpacity className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'>
               <Ionicons name='notifications-outline' size={20} color='white' />
             </TouchableOpacity> */}

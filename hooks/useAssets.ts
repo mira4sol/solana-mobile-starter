@@ -36,8 +36,8 @@ export function useAssets() {
   const [filteredAssets, setFilteredAssets] = useState<DasApiAsset[]>([])
 
   // For development/testing - replace with actual wallet address in production
-  // const walletAddress = activeWallet?.address;
-  const walletAddress = '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9'
+  const walletAddress = activeWallet?.address
+  // const walletAddress = '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9'
 
   // Track if this is the initial query or not
   const [isInitialQuery, setIsInitialQuery] = useState(true)
