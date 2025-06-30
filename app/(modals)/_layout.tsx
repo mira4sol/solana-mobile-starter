@@ -15,6 +15,7 @@ export default function ModalsLayout() {
       <Stack.Screen name='buy-crypto' />
       <Stack.Screen name='nft-detail' />
       <Stack.Screen name='wallet-switcher' />
+      <Stack.Screen name='search' />
       {/* <Stack.Screen name='create-post' /> */}
       {/* <Stack.Screen name='tip-user' /> */}
       <Stack.Screen name='post-comments' />

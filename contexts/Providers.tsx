@@ -23,6 +23,9 @@ const CryptoDarkTheme = {
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const queryClient = new QueryClient()
 
+  console.log('ENV.PRIVY_APP_ID', ENV.PRIVY_APP_ID)
+  console.log('ENV.PRIVY_APP_CLIENT_ID', ENV.PRIVY_APP_CLIENT_ID)
+
   return (
     <ThemeProvider value={CryptoDarkTheme}>
       <PrivyProvider

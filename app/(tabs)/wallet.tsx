@@ -1,57 +1,52 @@
-import { ActionButton } from '@/components/ActionButton';
-import { NFTCard } from '@/components/NFTCard';
-import { OfflineIndicator } from '@/components/OfflineIndicator';
-import { PortfolioSummary } from '@/components/PortfolioSummary';
-import { TokenCard } from '@/components/TokenCard';
-import { TokenCardSkeleton } from '@/components/TokenCardSkeleton';
-import { TransactionCard } from '@/components/TransactionCard';
-import { useAssets } from '@/hooks/useAssets';
-import { usePortfolio } from '@/hooks/usePortfolio';
-import { useTransactions } from '@/hooks/useTransactions';
-import { BirdEyeTokenItem } from '@/types';
-import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { ActionButton } from '@/components/ActionButton'
+import { HistoryTab, HistoryTabRef } from '@/components/HistoryTab'
+import { NFTsTab, NFTsTabRef } from '@/components/NFTsTab'
+import { OfflineIndicator } from '@/components/OfflineIndicator'
+import { PortfolioSummary } from '@/components/PortfolioSummary'
+import { TokensTab, TokensTabRef } from '@/components/TokensTab'
+import { Ionicons } from '@expo/vector-icons'
+import { router, useLocalSearchParams } from 'expo-router'
+import React, { useEffect, useRef, useState } from 'react'
 import {
-  FlatList,
   RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function WalletScreen() {
   const [activeTab, setActiveTab] = useState<'tokens' | 'nfts' | 'history'>(
     'tokens'
-  );
-  const [refreshing, setRefreshing] = useState(false);
-  const { portfolio, isLoading, isRefetching, error, refetch } = usePortfolio();
-  const {
-    transactions,
-    isLoading: transactionsLoading,
-    isRefetching: transactionsRefetching,
-    error: transactionsError,
-    refetch: refetchTransactions,
-  } = useTransactions();
-  const { tab } = useLocalSearchParams();
+  )
+  const [refreshing, setRefreshing] = useState(false)
+  const { tab } = useLocalSearchParams()
 
-  const {
-    assets,
-    loading: assetsLoading,
-    error: assetsError,
-    refetch: refetchAssets,
-  } = useAssets();
+  // Refs for each tab component
+  const tokensTabRef = useRef<TokensTabRef>(null)
+  const nftsTabRef = useRef<NFTsTabRef>(null)
+  const historyTabRef = useRef<HistoryTabRef>(null)
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    setRefreshing(true)
     try {
-      await Promise.all([refetch(), refetchTransactions(), refetchAssets()]);
+      // Only refresh the currently active tab
+      switch (activeTab) {
+        case 'tokens':
+          tokensTabRef.current?.refetch()
+          break
+        case 'nfts':
+          nftsTabRef.current?.refetch()
+          break
+        case 'history':
+          historyTabRef.current?.refetch()
+          break
+      }
     } finally {
-      setRefreshing(false);
+      setRefreshing(false)
     }
-  };
+  }
 
   // Update active tab if tab is passed in URL
   useEffect(() => {
@@ -60,35 +55,41 @@ export default function WalletScreen() {
       typeof tab === 'string' &&
       ['tokens', 'nfts', 'history'].includes(tab)
     ) {
-      setActiveTab(tab as 'tokens' | 'nfts' | 'history');
-    } else setActiveTab('tokens');
-  }, [tab]);
+      setActiveTab(tab as 'tokens' | 'nfts' | 'history')
+    } else setActiveTab('tokens')
+  }, [tab])
 
   return (
-    <SafeAreaView className="flex-1 bg-dark-50" edges={['top']}>
+    <SafeAreaView className='flex-1 bg-dark-50' edges={['top']}>
       <ScrollView
-        className="flex-1"
+        className='flex-1'
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#6366f1"
+            tintColor='#6366f1'
           />
         }
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-6 py-4">
-          <Text className="text-white text-2xl font-bold">Wallet</Text>
-          <View className="flex-row gap-3">
+        <View className='flex-row items-center justify-between px-6 py-4'>
+          <Text className='text-white text-2xl font-bold'>Wallet</Text>
+          <View className='flex-row gap-3'>
+            <TouchableOpacity
+              onPress={() => router.push('/(modals)/search')}
+              className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'
+            >
+              <Ionicons name='search' size={20} color='#6366f1' />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push('/(modals)/qr-scanner')}
-              className="w-10 h-10 bg-dark-200 rounded-full justify-center items-center"
+              className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'
             >
-              <Ionicons name="scan" size={20} color="#6366f1" />
+              <Ionicons name='scan' size={20} color='#6366f1' />
             </TouchableOpacity>
-            <TouchableOpacity className="w-10 h-10 bg-dark-200 rounded-full justify-center items-center">
-              <Ionicons name="settings-outline" size={20} color="white" />
+            <TouchableOpacity className='w-10 h-10 bg-dark-200 rounded-full justify-center items-center'>
+              <Ionicons name='settings-outline' size={20} color='white' />
             </TouchableOpacity>
           </View>
         </View>
@@ -97,43 +98,43 @@ export default function WalletScreen() {
         <OfflineIndicator />
 
         {/* Active Wallet */}
-        <View className="px-6 mb-6">
+        <View className='px-6 mb-6'>
           <PortfolioSummary />
         </View>
 
         {/* Quick Actions */}
-        <View className="px-6 mb-6">
-          <Text className="text-white text-xl font-bold mb-4">
+        <View className='px-6 mb-6'>
+          <Text className='text-white text-xl font-bold mb-4'>
             Quick Actions
           </Text>
-          <View className="flex-row gap-3">
+          <View className='flex-row gap-3'>
             <ActionButton
-              icon="arrow-down"
-              title="Receive"
+              icon='arrow-down'
+              title='Receive'
               onPress={() => router.push('/(modals)/receive')}
             />
             <ActionButton
-              icon="arrow-up"
-              title="Send"
+              icon='arrow-up'
+              title='Send'
               onPress={() => router.push('/(modals)/send')}
             />
             <ActionButton
-              icon="swap-horizontal"
-              title="Swap"
+              icon='swap-horizontal'
+              title='Swap'
               // gradient={true}
               onPress={() => router.push('/(modals)/swap')}
             />
             <ActionButton
-              icon="add-circle-outline"
-              title="Buy"
+              icon='add-circle-outline'
+              title='Buy'
               onPress={() => router.push('/(modals)/buy-crypto')}
             />
           </View>
         </View>
 
         {/* Tabs */}
-        <View className="px-6 mb-4">
-          <View className="flex-row bg-dark-200 rounded-2xl p-1">
+        <View className='px-6 mb-4'>
+          <View className='flex-row bg-dark-200 rounded-2xl p-1'>
             {(['tokens', 'nfts', 'history'] as const).map((tab) => (
               <TouchableOpacity
                 key={tab}
@@ -155,176 +156,15 @@ export default function WalletScreen() {
         </View>
 
         {/* Content */}
-        <View className="px-6">
-          {activeTab === 'tokens' && (
-            <View>
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-white text-lg font-semibold">
-                  Your Tokens
-                </Text>
-                {/* <TouchableOpacity>
-                  <Text className='text-primary-400 font-medium'>Sort</Text>
-                </TouchableOpacity> */}
-              </View>
-
-              {isLoading && !portfolio ? (
-                <TokenCardSkeleton count={5} />
-              ) : error ? (
-                <View className="bg-dark-200 rounded-2xl p-6 items-center">
-                  <Ionicons name="warning-outline" size={48} color="#ef4444" />
-                  <Text className="text-gray-400 text-center mt-4">
-                    {error}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => refetch()}
-                    className="mt-4 bg-primary-500 rounded-xl px-4 py-2"
-                  >
-                    <Text className="text-white font-medium">Retry</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : portfolio?.items && portfolio.items.length > 0 ? (
-                portfolio.items.map(
-                  (token: BirdEyeTokenItem, index: number) => (
-                    <TokenCard
-                      key={`${token.address}-${index}`}
-                      token={token}
-                    />
-                  )
-                )
-              ) : (
-                <View className="bg-dark-200 rounded-2xl p-6 items-center">
-                  <Ionicons name="wallet-outline" size={48} color="#666672" />
-                  <Text className="text-gray-400 text-center mt-4">
-                    No tokens found in your wallet
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-
-          {activeTab === 'nfts' && (
-            <View>
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-white text-lg font-semibold">
-                  Your NFTs
-                </Text>
-                <TouchableOpacity 
-                  onPress={() => router.push('/nft-gallery')}
-                  className="flex-row items-center gap-1">
-                  <Text className="text-primary-400 font-medium">View Gallery</Text>
-                  <Ionicons name="arrow-forward" size={14} color="#6366f1" />
-                </TouchableOpacity>
-              </View>
-
-              {assetsLoading ? (
-                <View className="h-48">
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {[...Array(3)].map((_, index) => (
-                      <View
-                        key={index}
-                        className="w-40 h-40 bg-dark-300 rounded-2xl mr-4 animate-pulse"
-                      />
-                    ))}
-                  </ScrollView>
-                </View>
-              ) : assetsError ? (
-                <View className="bg-dark-200 rounded-2xl p-6 items-center">
-                  <Ionicons name="warning-outline" size={48} color="#ef4444" />
-                  <Text className="text-gray-400 text-center mt-4">
-                    {assetsError.toString()}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => refetchAssets()}
-                    className="mt-4 bg-primary-500 rounded-xl px-4 py-2"
-                  >
-                    <Text className="text-white font-medium">Retry</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : assets && assets.length > 0 ? (
-                <FlatList
-                  data={assets}
-                  renderItem={({ item }) => (
-                    <NFTCard
-                      asset={item}
-                      onPress={() =>
-                        router.push({
-                          pathname: '/(modals)/nft-detail',
-                          params: { id: item.id },
-                        })
-                      }
-                    />
-                  )}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingRight: 24 }}
-                />
-              ) : (
-                <View className="bg-dark-200 rounded-2xl p-6 items-center">
-                  <Ionicons name="images-outline" size={48} color="#666672" />
-                  <Text className="text-gray-400 text-center mt-4">
-                    No NFTs found in your wallet
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-
-          {activeTab === 'history' && (
-            <View>
-              <Text className="text-white text-lg font-semibold mb-4">
-                Transaction History
-              </Text>
-              {transactionsLoading && !transactionsRefetching ? (
-                <View className="bg-dark-200 rounded-2xl p-6 items-center">
-                  <View className="w-full h-16 bg-dark-300 rounded-xl mb-3 animate-pulse" />
-                  <View className="w-full h-16 bg-dark-300 rounded-xl mb-3 animate-pulse" />
-                  <View className="w-full h-16 bg-dark-300 rounded-xl animate-pulse" />
-                </View>
-              ) : transactionsError ? (
-                <View className="bg-dark-200 rounded-2xl p-6 items-center">
-                  <Ionicons
-                    name="alert-circle-outline"
-                    size={48}
-                    color="#ef4444"
-                  />
-                  <Text className="text-gray-400 text-center mt-4">
-                    {transactionsError}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => refetchTransactions()}
-                    className="mt-4 bg-primary-500 rounded-xl px-4 py-2"
-                  >
-                    <Text className="text-white font-medium">Retry</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : transactions && transactions.length > 0 ? (
-                transactions.map((transaction) => (
-                  <TransactionCard
-                    key={transaction.id}
-                    transaction={transaction}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/(modals)/transaction-details',
-                        params: { transactionId: transaction.id },
-                      })
-                    }
-                  />
-                ))
-              ) : (
-                <View className="bg-dark-200 rounded-2xl p-6 items-center">
-                  <Ionicons name="time-outline" size={48} color="#666672" />
-                  <Text className="text-gray-400 text-center mt-4">
-                    No transactions found
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
+        <View className='px-6'>
+          {activeTab === 'tokens' && <TokensTab ref={tokensTabRef} />}
+          {activeTab === 'nfts' && <NFTsTab ref={nftsTabRef} />}
+          {activeTab === 'history' && <HistoryTab ref={historyTabRef} />}
         </View>
 
         {/* Bottom Spacing */}
         {/* <View className='h-8' /> */}
       </ScrollView>
     </SafeAreaView>
-  );
+  )
 }

@@ -31,8 +31,8 @@
       "package": "com.seekers.hub"
     },
     "plugins": [
-      "expo-router",
       "expo-secure-store",
+      "expo-router",
       "expo-apple-authentication",
       [
         "expo-build-properties",

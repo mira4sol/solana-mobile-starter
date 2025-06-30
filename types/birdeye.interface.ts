@@ -2,7 +2,7 @@ export interface BirdEyeTokenItem {
   address: string
   decimals: number
   balance: number
-  uiAmount: number
+  uiAmount?: number // Computed field for display (balance / 10^decimals)
   chainId: string
   name?: string
   symbol?: string

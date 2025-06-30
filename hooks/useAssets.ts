@@ -10,6 +10,7 @@ import {
   DasApiAsset,
   DasApiAssetList,
 } from '@metaplex-foundation/digital-asset-standard-api'
+import { clusterApiUrl } from '@solana/web3.js'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -36,8 +37,8 @@ export function useAssets() {
   const [filteredAssets, setFilteredAssets] = useState<DasApiAsset[]>([])
 
   // For development/testing - replace with actual wallet address in production
-  // const walletAddress = activeWallet?.address;
-  const walletAddress = '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9'
+  const walletAddress = activeWallet?.address
+  // const walletAddress = '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9'
 
   // Track if this is the initial query or not
   const [isInitialQuery, setIsInitialQuery] = useState(true)
@@ -67,7 +68,7 @@ export function useAssets() {
 
       const response = await auraRequests.getAssetsByOwner(
         walletAddress,
-        'https://api.mainnet-beta.solana.com',
+        clusterApiUrl('mainnet-beta'),
         {
           limit,
           cursor,

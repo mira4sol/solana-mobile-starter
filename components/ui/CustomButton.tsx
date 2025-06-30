@@ -24,6 +24,7 @@ interface CustomButtonProps {
   iconColor?: string
   style?: ViewStyle
   children?: React.ReactNode
+  disableGradient?: boolean
 }
 
 export default function CustomButton({
@@ -39,6 +40,7 @@ export default function CustomButton({
   iconColor,
   style,
   children,
+  disableGradient = false,
 }: CustomButtonProps) {
   const isDisabled = disabled || loading
 
@@ -49,7 +51,9 @@ export default function CustomButton({
       case 'primary':
         return isDisabled
           ? ['#2d2d35', '#2d2d35']
-          : ['#6366f1', '#8b5cf6', '#06b6d4']
+          : disableGradient
+            ? ['#6366f1', '#8b5cf6']
+            : ['#6366f1', '#8b5cf6', '#06b6d4']
       case 'secondary':
         return undefined // Uses border styling instead
       case 'dark':

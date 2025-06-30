@@ -1,12 +1,17 @@
 import {
+  clusterApiUrl,
   Connection,
   PublicKey,
   SystemProgram,
   Transaction,
 } from '@solana/web3.js'
+import bs58 from 'bs58'
 
+export const SYSTEM_PROGRAM = '11111111111111111111111111111111'
 export const NATIVE_SOL_MINT = 'So11111111111111111111111111111111111111111'
 export const WRAPPED_SOL_MINT = 'So11111111111111111111111111111111111111112'
+
+export const connection = new Connection(clusterApiUrl('mainnet-beta'))
 
 export const sendNativeSol = async (
   connection: Connection,
@@ -20,54 +25,43 @@ export const sendNativeSol = async (
     toPubkey: PublicKey
   }
 ) => {
+  console.log('sendNativeSol', {
+    amount,
+    fromPubkey,
+    toPubkey,
+  })
   try {
+    console.log('111111')
     // ensure the receiving account will be rent exempt
     const minimumBalance = await connection.getMinimumBalanceForRentExemption(
       0 // note: simple accounts that just store native SOL have `0` bytes of data
     )
-
+    console.log('22222')
     if (amount < minimumBalance) {
       throw new Error(`account may not be rent exempt: ${toPubkey.toBase58()}`)
-      // return Response.json({
-      //   error: `account may not be rent exempt: ${toPubkey.toBase58()}`,
-      // })
     }
-
+    console.log('33333')
     // create an instruction to transfer native SOL from one wallet to another
     const transferSolInstruction = SystemProgram.transfer({
       fromPubkey: fromPubkey,
       toPubkey: toPubkey,
       lamports: amount,
     })
-
+    console.log('44444')
     // get the latest blockhash amd block height
     const { blockhash, lastValidBlockHeight } =
       await connection.getLatestBlockhash()
-
+    console.log('55555')
     // create a legacy transaction
     const transaction = new Transaction({
       feePayer: fromPubkey,
       blockhash,
       lastValidBlockHeight,
     }).add(transferSolInstruction)
-
-    // const transaction = new Transaction().add(
-    //   SystemProgram.transfer({
-    //     fromPubkey: fromPubkey,
-    //     toPubkey: toPubkey,
-    //     lamports: amount,
-    //   })
-    // )
-    // transaction.feePayer = fromPubkey
-    // transaction.recentBlockhash = (
-    //   await connection.getLatestBlockhash()
-    // ).blockhash
-    // transaction.lastValidBlockHeight = (
-    //   await connection.getLatestBlockhash()
-    // ).lastValidBlockHeight
-
+    console.log('66666')
     return transaction
   } catch (error: any) {
+    console.log('error', error)
     throw new Error(error.message || 'Unknown error occurred')
   }
 }
@@ -81,4 +75,31 @@ export const calculateFee = async (
     'confirmed'
   )
   return fee.value || 0
+}
+
+export const isMintAddress = (address: string) => {
+  // Solana addresses are 32-44 characters long and contain only base58 characters
+  const solanaAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+
+  return solanaAddressRegex.test(address)
+}
+
+export const isValidSolanaAddress = (address: string): boolean => {
+  try {
+    if (!address) return false
+
+    const pubKey = new PublicKey(address)
+    return PublicKey.isOnCurve(pubKey.toBytes())
+  } catch {
+    return false
+  }
+}
+
+export const isValidBase58PrivateKey = (key: string): boolean => {
+  try {
+    const decoded = bs58.decode(key.trim())
+    return decoded.length === 64 // Solana private key is 64 bytes
+  } catch {
+    return false
+  }
 }

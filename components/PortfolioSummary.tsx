@@ -5,7 +5,7 @@ import { formatWalletAddress } from '@privy-io/expo'
 import * as Clipboard from 'expo-clipboard'
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { Animated, Text, TouchableOpacity, View } from 'react-native'
 
 interface PortfolioSummaryProps {}
@@ -25,7 +25,7 @@ export function PortfolioSummary({}: PortfolioSummaryProps) {
     })
   }
 
-  const calculatePortfolioChange = () => {
+  const portfolioChange = useMemo(() => {
     if (!portfolio?.items || portfolio.items.length === 0) {
       return { changeValue: 0, changePercent: 0 }
     }
@@ -50,10 +50,10 @@ export function PortfolioSummary({}: PortfolioSummaryProps) {
         : 0
 
     return { changeValue: totalChangeValue, changePercent }
-  }
+  }, [portfolio?.items])
 
-  const formatPortfolioChange = () => {
-    const { changeValue, changePercent } = calculatePortfolioChange()
+  const formattedPortfolioChange = useMemo(() => {
+    const { changeValue, changePercent } = portfolioChange
 
     if (changeValue === 0) return null
 
@@ -69,7 +69,7 @@ export function PortfolioSummary({}: PortfolioSummaryProps) {
       text: `${sign}$${formattedValue} (${sign}${formattedPercent}%)`,
       isPositive,
     }
-  }
+  }, [portfolioChange])
 
   const copyToClipboard = async () => {
     if (!activeWallet?.address) return
@@ -185,20 +185,17 @@ export function PortfolioSummary({}: PortfolioSummaryProps) {
         <Text className='text-white text-3xl font-bold'>
           ${formatPortfolioValue(portfolio?.totalUsd)}
         </Text>
-        {(() => {
-          const change = formatPortfolioChange()
-          if (!change) return null
-
-          return (
-            <Text
-              className={`text-xs font-semibold ${
-                change.isPositive ? 'text-green-400' : 'text-red-300'
-              }`}
-            >
-              {change.text}
-            </Text>
-          )
-        })()}
+        {formattedPortfolioChange && (
+          <Text
+            className={`text-xs font-semibold ${
+              formattedPortfolioChange.isPositive
+                ? 'text-green-400'
+                : 'text-red-300'
+            }`}
+          >
+            {formattedPortfolioChange.text}
+          </Text>
+        )}
       </View>
       {/* <View className='flex-row items-center'>
         <Text className='text-success-300 font-semibold mr-2'>{'+10.58'}</Text>

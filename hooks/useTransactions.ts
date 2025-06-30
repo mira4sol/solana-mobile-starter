@@ -91,8 +91,8 @@ export const useTransactions = () => {
     setError,
   } = useTransactionsStore()
 
-  const walletAddress = '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9'
-  // const walletAddress = activeWallet?.address
+  // const walletAddress = '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9'
+  const walletAddress = activeWallet?.address
 
   const {
     data,

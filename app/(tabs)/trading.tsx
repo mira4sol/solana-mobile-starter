@@ -3,12 +3,12 @@ import { TokenCardSkeleton } from '@/components/TokenCardSkeleton'
 import { useTrendingInfinite } from '@/hooks/useTrending'
 import { BirdEyeTrendingTokenItem } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
   FlatList,
   RefreshControl,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native'
@@ -33,7 +33,6 @@ const trendingCategories = [
 ]
 
 export default function TradingScreen() {
-  const [searchQuery, setSearchQuery] = useState('')
   const [activeTimeFrame, setActiveTimeFrame] = useState('24H')
   const [activeSortOption, setActiveSortOption] = useState('Market Cap')
   const [refreshing, setRefreshing] = useState(false)
@@ -74,13 +73,8 @@ export default function TradingScreen() {
     liquidity: token.liquidity,
   })
 
-  // Filter tokens based on search query
-  const filteredTokens =
-    trending?.tokens.filter(
-      (token) =>
-        token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-    ) || []
+  // Get all trending tokens
+  const filteredTokens = trending?.tokens || []
 
   const CategoryCard = ({ category }: any) => (
     <TouchableOpacity className='bg-dark-200 rounded-2xl p-4 mr-3 w-32 active:scale-95'>
@@ -154,16 +148,15 @@ export default function TradingScreen() {
 
             {/* Search */}
             <View className='mb-6'>
-              <View className='bg-dark-200 rounded-2xl px-4 py-3 flex-row items-center'>
+              <TouchableOpacity
+                className='bg-dark-200 rounded-2xl px-4 py-3 flex-row items-center'
+                onPress={() => router.push('/(modals)/search')}
+              >
                 <Ionicons name='search' size={20} color='#666672' />
-                <TextInput
-                  className='flex-1 text-white ml-3 text-lg'
-                  placeholder='Search tokens...'
-                  placeholderTextColor='#666672'
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-              </View>
+                <Text className='flex-1 text-gray-400 ml-3 text-lg'>
+                  Search tokens...
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Time Frames */}
@@ -266,21 +259,6 @@ export default function TradingScreen() {
                 </View>
               </View>
             )}
-
-            {/* No results for search */}
-            {searchQuery &&
-              filteredTokens.length === 0 &&
-              !isLoading &&
-              !error && (
-                <View className='mb-6'>
-                  <View className='bg-dark-200 rounded-2xl p-6 items-center'>
-                    <Ionicons name='search-outline' size={48} color='#666672' />
-                    <Text className='text-gray-400 text-center mt-4'>
-                      No tokens found for "{searchQuery}"
-                    </Text>
-                  </View>
-                </View>
-              )}
           </View>
         }
         contentContainerStyle={{ paddingBottom: 20 }}
