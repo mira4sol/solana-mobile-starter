@@ -35,5 +35,18 @@ const resolveRequestWithPackageExports = (context, moduleName, platform) => {
 }
 
 config.resolver.resolveRequest = resolveRequestWithPackageExports
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  crypto: require.resolve('react-native-get-random-values'),
+  // crypto: require.resolve('expo-crypto'),
+  buffer: require.resolve('@craftzdog/react-native-buffer'),
+  fs: require.resolve('./libs/fsPolyfills'),
+  'text-encoding': require.resolve('text-encoding'),
+  stream: require.resolve('stream-browserify'),
+  // Add web streams API polyfill
+  'web-streams-polyfill': require.resolve('web-streams-polyfill'),
+  // Add events polyfill
+  events: require.resolve('events'),
+}
 
 module.exports = withNativeWind(config, { input: './global.css' })

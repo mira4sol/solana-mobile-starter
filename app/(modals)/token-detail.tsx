@@ -3,12 +3,15 @@ import { blurHashPlaceholder } from '@/constants/App'
 import { useTokenOverview } from '@/hooks/useTokenOverview'
 import { formatPercentage, formatValue } from '@/libs/string.helpers'
 import { Ionicons } from '@expo/vector-icons'
+import * as Clipboard from 'expo-clipboard'
+import * as Haptics from 'expo-haptics'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router, useLocalSearchParams } from 'expo-router'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
   RefreshControl,
   ScrollView,
@@ -24,6 +27,8 @@ const { width } = Dimensions.get('window')
 export default function TokenDetailScreen() {
   const [imageError, setImageError] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [addressCopied, setAddressCopied] = useState(false)
+  const copyScaleAnim = useRef(new Animated.Value(1)).current
   const { tokenAddress } = useLocalSearchParams<{ tokenAddress: string }>()
 
   const {
@@ -140,6 +145,42 @@ export default function TokenDetailScreen() {
   }
 
   const riskLevel = getRiskLevel()
+
+  // Format address for display (first 4 + last 4 characters)
+  const formatMintAddress = (address: string) => {
+    if (!address) return ''
+    return `${address.slice(0, 4)}...${address.slice(-4)}`
+  }
+
+  const copyMintAddress = async () => {
+    if (!tokenAddress) return
+
+    try {
+      await Clipboard.setStringAsync(tokenAddress)
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+      setAddressCopied(true)
+
+      // Scale animation
+      Animated.sequence([
+        Animated.timing(copyScaleAnim, {
+          toValue: 0.95,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(copyScaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start()
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => setAddressCopied(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy mint address:', error)
+    }
+  }
 
   const ActionButton = ({ icon, title, onPress, color = '#6366f1' }: any) => (
     <TouchableOpacity
@@ -264,30 +305,75 @@ export default function TokenDetailScreen() {
                     tokenOverview.price >= 1 ? 2 : 6
                   )}
                 </Text>
-                <View className='flex-row items-center'>
-                  <Text
-                    className={`text-lg font-semibold mr-2 ${
-                      priceChange24h >= 0
-                        ? 'text-success-400'
-                        : 'text-danger-400'
-                    }`}
+                <View className='flex-row items-center justify-between'>
+                  <View className='flex-row items-center'>
+                    <Text
+                      className={`text-lg font-semibold mr-2 ${
+                        priceChange24h >= 0
+                          ? 'text-success-400'
+                          : 'text-danger-400'
+                      }`}
+                    >
+                      {formatPercentage(priceChange24h)}
+                    </Text>
+                    <Text
+                      className={`text-lg ${
+                        priceChange24hValue >= 0
+                          ? 'text-success-400'
+                          : 'text-danger-400'
+                      }`}
+                    >
+                      (${priceChange24hValue >= 0 ? '+' : ''}
+                      {Math.abs(priceChange24hValue).toFixed(
+                        tokenOverview.price >= 1 ? 2 : 6
+                      )}
+                      )
+                    </Text>
+                  </View>
+
+                  {/* Mint Address Copy Button */}
+                  <Animated.View
+                    style={{ transform: [{ scale: copyScaleAnim }] }}
                   >
-                    {formatPercentage(priceChange24h)}
-                  </Text>
-                  <Text
-                    className={`text-lg ${
-                      priceChange24hValue >= 0
-                        ? 'text-success-400'
-                        : 'text-danger-400'
-                    }`}
-                  >
-                    (${priceChange24hValue >= 0 ? '+' : ''}
-                    {Math.abs(priceChange24hValue).toFixed(
-                      tokenOverview.price >= 1 ? 2 : 6
-                    )}
-                    )
-                  </Text>
+                    <TouchableOpacity
+                      onPress={copyMintAddress}
+                      className='flex-row items-center bg-dark-200/80 rounded-xl px-3 py-2 active:opacity-70'
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name='cube-outline'
+                        size={14}
+                        color='rgba(255,255,255,0.7)'
+                      />
+                      <Text className='text-white/70 text-xs font-mono ml-2 mr-2'>
+                        {formatMintAddress(tokenAddress || '')}
+                      </Text>
+                      <Ionicons
+                        name={
+                          addressCopied ? 'checkmark-outline' : 'copy-outline'
+                        }
+                        size={14}
+                        color={
+                          addressCopied ? '#10b981' : 'rgba(255,255,255,0.7)'
+                        }
+                      />
+                    </TouchableOpacity>
+                  </Animated.View>
                 </View>
+
+                {/* Copy Success Feedback */}
+                {/* {addressCopied && (
+                  <View className='mt-2 flex-row items-center justify-end'>
+                    <Ionicons
+                      name='checkmark-circle'
+                      size={16}
+                      color='#10b981'
+                    />
+                    <Text className='text-green-400 text-sm ml-1'>
+                      Mint address copied!
+                    </Text>
+                  </View>
+                )} */}
               </View>
             </View>
 
