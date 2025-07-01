@@ -6,7 +6,7 @@ export interface BirdEyeTokenItem {
   chainId: string
   name?: string
   symbol?: string
-  icon?: string
+  // icon?: string
   logoURI?: string
   priceUsd?: number
   valueUsd?: number
@@ -174,6 +174,12 @@ export interface BirdEyeHistoricalPriceItem {
 
 export interface BirdEyeHistoricalPriceResponse {
   items: BirdEyeHistoricalPriceItem[]
+}
+
+export interface BirdEyeTokenOverviewResponse {
+  tokenOverview: BirdEyeTokenOverview
+  ohlcv?: BirdEyeTokenOHLCV
+  lineChart?: BirdEyeHistoricalPriceResponse
 }
 
 export interface BirdEyeTokenOverview {

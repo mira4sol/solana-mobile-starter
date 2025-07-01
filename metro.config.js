@@ -35,5 +35,9 @@ const resolveRequestWithPackageExports = (context, moduleName, platform) => {
 }
 
 config.resolver.resolveRequest = resolveRequestWithPackageExports
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  crypto: require.resolve('react-native-get-random-values'),
+}
 
 module.exports = withNativeWind(config, { input: './global.css' })

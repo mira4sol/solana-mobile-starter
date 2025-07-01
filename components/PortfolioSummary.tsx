@@ -192,7 +192,7 @@ export function PortfolioSummary({}: PortfolioSummaryProps) {
           return (
             <Text
               className={`text-xs font-semibold ${
-                change.isPositive ? 'text-green-400' : 'text-red-400'
+                change.isPositive ? 'text-green-400' : 'text-red-300'
               }`}
             >
               {change.text}

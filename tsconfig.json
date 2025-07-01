@@ -5,9 +5,7 @@
     // Allows us to use conditional/deep imports on published packages
     "moduleResolution": "Bundler",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -16,6 +14,7 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "app/index.js",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    "libs/fsPolyfills.js"
   ]
 }

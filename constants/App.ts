@@ -1,8 +1,11 @@
-import { ENV } from './Env'
+import { ENV } from './Env';
 
 export const Keys = {
-  PRIVY_ACCESS_TOKEN: 'privy_access_token',
-}
+  PRIVY_IDENTITY_TOKEN: 'privy_identity_token',
+};
+
+export const blurHashPlaceholder =
+  '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
 export const ENDPOINTS = {
   // Use the SERVER_URL from env
@@ -24,7 +27,7 @@ export const ENDPOINTS = {
   // Helius RPC endpoint from env
   helius: `https://mainnet.helius-rpc.com/?api-key=${ENV.HELIUS_API_KEY}`,
   tensorFlowBaseUrl: 'https://api.mainnet.tensordev.io',
-}
+};
 
 export const PUBLIC_KEYS = {
   wSolMint: 'So11111111111111111111111111111111111111112',
@@ -40,7 +43,7 @@ export const PUBLIC_KEYS = {
     'DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL',
     '3AVi9Tg9Uo68tJfuvoKvqKNWKc5wPdSSdeBnizKZ6jT',
   ],
-}
+};
 
 // Mock data
 export const portfolioData = {
@@ -81,7 +84,7 @@ export const portfolioData = {
       logo: '🐕',
     },
   ],
-}
+};
 
 export const trendingTokens = [
   {
@@ -116,7 +119,7 @@ export const trendingTokens = [
     volume: '$19.8M',
     logo: '📡',
   },
-]
+];
 
 export const socialPosts = [
   {
@@ -136,7 +139,7 @@ export const socialPosts = [
     tips: 8,
     timeAgo: '4h',
   },
-]
+];
 
 // Mock data
 export const walletData = {
@@ -160,7 +163,7 @@ export const walletData = {
       isActive: false,
     },
   ],
-}
+};
 
 export const tokens = [
   {
@@ -213,25 +216,4 @@ export const tokens = [
     logo: '🪐',
     color: '#FFA500',
   },
-]
-
-export const nfts = [
-  {
-    name: 'Mad Lads #1234',
-    collection: 'Mad Lads',
-    value: '45 SOL',
-    image: '🦍',
-  },
-  {
-    name: 'SMB #5678',
-    collection: 'Solana Monkey Business',
-    value: '12 SOL',
-    image: '🐵',
-  },
-  {
-    name: 'Okay Bears #9012',
-    collection: 'Okay Bears',
-    value: '8 SOL',
-    image: '🐻',
-  },
-]
+];

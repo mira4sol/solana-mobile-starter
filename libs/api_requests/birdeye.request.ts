@@ -3,7 +3,7 @@ import {
   BirdEyeSearchResponse,
   BirdEyeTimePeriod,
   BirdEyeTokenOHLCV,
-  BirdEyeTokenOverview,
+  BirdEyeTokenOverviewResponse,
   BirdEyeTrendingTokens,
   BirdEyeWalletPortfolio,
   BirdEyeWalletTransactionHistory,
@@ -111,14 +111,14 @@ export const birdEyeRequests = {
         }
       )
 
-      return apiResponse<BirdEyeTokenOverview>(
+      return apiResponse<BirdEyeTokenOverviewResponse>(
         true,
         'Fetched token overview',
         res.data
       )
     } catch (err: any) {
       console.log('Error fetching token overview:', err?.response?.data)
-      return apiResponse<BirdEyeTokenOverview>(
+      return apiResponse<BirdEyeTokenOverviewResponse>(
         false,
         err?.response?.data?.message || err?.message || 'Error occurred.',
         undefined
@@ -178,9 +178,9 @@ export const birdEyeRequests = {
       time_to,
       setLoading,
     }: {
-      type: BirdEyeTimePeriod
-      time_from: number
-      time_to: number
+      type?: BirdEyeTimePeriod
+      time_from?: number
+      time_to?: number
       setLoading?: (loading: boolean) => void
     }
   ) => {

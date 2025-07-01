@@ -1,5 +1,6 @@
 import { Keypair, VersionedTransaction } from '@solana/web3.js'
 import axios, { AxiosInstance } from 'axios'
+import { Buffer } from 'buffer'
 import {
   JupiterExecuteOrderResponse,
   JupiterOrderRequest,

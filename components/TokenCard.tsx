@@ -1,18 +1,26 @@
+import { blurHashPlaceholder } from '@/constants/App'
+import { formatPriceChange, formatValue } from '@/libs/string.helpers'
+import { cn } from '@/libs/utils'
 import { BirdEyeTokenItem } from '@/types'
+import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
-import { Image, Text, TouchableOpacity, View } from 'react-native'
+import { Text, TouchableOpacity, View } from 'react-native'
 
 interface TokenCardProps {
   token: BirdEyeTokenItem
   showBalance?: boolean
   onPress?: () => void
+  className?: string
+  mc?: boolean
 }
 
 export function TokenCard({
   token,
   showBalance = true,
+  mc = false,
   onPress,
+  className,
 }: TokenCardProps) {
   const [imageError, setImageError] = useState(false)
 
@@ -32,49 +40,16 @@ export function TokenCard({
     }
   }
 
-  const formatBalance = (balance: number, symbol?: string) => {
-    if (balance >= 1000000) {
-      return `${(balance / 1000000).toFixed(2)}M ${symbol || ''}`
-    } else if (balance >= 1000) {
-      return `${(balance / 1000).toFixed(2)}K ${symbol || ''}`
-    } else if (balance < 0.01 && balance > 0) {
-      // Show up to two significant digits after leading zeros, no exponential
-      const balanceStr = balance.toFixed(8) // up to 8 decimals for safety
-      const match = balanceStr.match(/^0\.0*(\d{1,2})/)
-      const digits = match
-        ? match[1]
-        : balanceStr.split('.')[1]?.slice(0, 2) || '00'
-      return `0.${'0'.repeat(balanceStr.split('.')[1]?.indexOf(digits) ?? 0)}${digits} ${symbol || ''}`
-    } else {
-      return `${balance.toFixed(balance >= 1 ? 2 : 4)} ${symbol || ''}`
-    }
-  }
-
-  const formatValue = (value?: number) => {
-    if (!value) return '$0.00'
-
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(2)}K`
-    } else {
-      return `$${value.toFixed(2)}`
-    }
-  }
-
-  const formatPriceChange = (change?: number) => {
-    if (!change) return '+0.0%'
-    const sign = change >= 0 ? '+' : ''
-    return `${sign}${change.toFixed(2)}%`
-  }
-
-  const imageUri = token.logoURI || token.icon
+  // const imageUri = token.logoURI || token.icon
+  const imageUri = token.logoURI
   const showImage = imageUri && !imageError
-
   return (
     <TouchableOpacity
       onPress={handlePress}
-      className='bg-dark-200 rounded-2xl p-4 mb-3 active:scale-98'
+      className={cn(
+        'bg-dark-200 rounded-2xl p-4 mb-3 active:scale-98',
+        className
+      )}
     >
       <View className='flex-row items-center justify-between'>
         <View className='flex-row items-center flex-1'>
@@ -84,7 +59,8 @@ export function TokenCard({
                 source={{ uri: imageUri }}
                 style={{ width: 48, height: 48, borderRadius: 24 }}
                 onError={() => setImageError(true)}
-                resizeMode='cover'
+                // resizeMode='cover'
+                placeholder={{ blurhash: blurHashPlaceholder }}
               />
             ) : (
               <Text className='text-lg font-bold text-primary-400'>
@@ -99,7 +75,8 @@ export function TokenCard({
             </Text>
             <Text className='text-gray-400 text-sm' numberOfLines={1}>
               {/* {token.name || 'Unknown Token'} */}
-              {formatBalance(token.uiAmount || token.balance, token.symbol)}
+              {mc && '$'}
+              {formatValue(token.uiAmount || token.balance)} {token.symbol}
             </Text>
             {/* {showBalance && (
               <Text className='text-gray-500 text-xs'>
@@ -110,7 +87,7 @@ export function TokenCard({
         </View>
         <View className='items-end'>
           <Text className='text-white font-semibold text-lg'>
-            {formatValue(token.valueUsd)}
+            ${formatValue(token.valueUsd)}
           </Text>
           {token.priceChange24h !== undefined && (
             <Text
