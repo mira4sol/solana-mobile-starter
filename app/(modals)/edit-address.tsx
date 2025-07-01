@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function EditAddressScreen() {
   const { entryId } = useLocalSearchParams<{ entryId: string }>();
   const { activeWallet } = useAuthStore();
-  const walletAddress = activeWallet?.address || '';
+  const walletAddress = activeWallet?.address;
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadingEntry, setLoadingEntry] = useState(!!entryId);
@@ -62,12 +62,12 @@ export default function EditAddressScreen() {
       } else {
         console.error('Failed to fetch address details:', response.message);
         Alert.alert('Error', 'Failed to load address details');
-        router.back();
+        router.dismiss();
       }
     } catch (error) {
       console.error('Error fetching address details:', error);
       Alert.alert('Error', 'Failed to load address details');
-      router.back();
+      router.dismiss();
     } finally {
       setLoadingEntry(false);
     }
@@ -97,8 +97,6 @@ export default function EditAddressScreen() {
       Alert.alert('Error', 'Please enter a wallet address');
       return false;
     }
-
-    // Simple address validation for Solana (base58 format, starts with a number)
     if (
       network === 'solana' &&
       !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)
@@ -122,13 +120,11 @@ export default function EditAddressScreen() {
 
     const entryData = {
       name,
-      walletAddress: address,
+      address,
       description,
       network,
       isFavorite,
       tags,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
     };
 
     setIsLoading(true);
@@ -157,7 +153,7 @@ export default function EditAddressScreen() {
             ? 'Address updated successfully'
             : 'Address added successfully'
         );
-        router.back();
+        router.dismiss();
       } else {
         Alert.alert('Error', response.message || 'Failed to save address');
       }
@@ -190,7 +186,7 @@ export default function EditAddressScreen() {
         className="flex-1"
       >
         <View className="flex-row items-center p-4 border-b border-dark-300">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <TouchableOpacity onPress={() => router.dismiss()} className="mr-4">
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
           <Text className="text-white text-xl font-semibold flex-1">
@@ -255,7 +251,7 @@ export default function EditAddressScreen() {
           </View>
 
           {/* Network Selection */}
-          {/* <View className="mb-4">
+          <View className="mb-4">
             <Text className="text-white text-sm mb-2 ml-1">Network</Text>
             <View className="bg-dark-200 rounded-2xl p-1 flex-row">
               {['solana', 'soon', 'sonic'].map((net) => (
@@ -276,7 +272,7 @@ export default function EditAddressScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-          </View> */}
+          </View>
 
           {/* Favorite Toggle */}
           <View className="bg-dark-200 rounded-2xl mb-4">

@@ -1,7 +1,5 @@
-import axios from 'axios'
-import { httpRequest } from '../api.helpers'
-import { apiResponse } from '../api.helpers'
-import { AddressBookEntry } from '@/types'
+import { AddressBookEntry } from '@/types';
+import { apiResponse, httpRequest } from '../api.helpers';
 
 export const addressBookRequests = {
   /**
@@ -10,16 +8,22 @@ export const addressBookRequests = {
    */
   getAddressBook: async (walletAddress: string) => {
     try {
-      const api = httpRequest()
-      const response = await api.get(`/api/wallet/address-book/${walletAddress}`)
-      return apiResponse(true, 'Address book entries fetched successfully', response.data)
+      const api = httpRequest();
+      const response = await api.get(`/wallet/address-book/${walletAddress}`);
+      return apiResponse(
+        true,
+        'Address book entries fetched successfully',
+        response.data
+      );
     } catch (err: any) {
-      console.log('Error fetching address book entries:', err?.response?.data)
+      console.log('Error fetching address book entries:', err?.response?.data);
       return apiResponse(
         false,
-        err?.response?.data?.message || err?.message || 'Error fetching address book entries',
+        err?.response?.data?.message ||
+          err?.message ||
+          'Error fetching address book entries',
         err
-      )
+      );
     }
   },
 
@@ -30,16 +34,24 @@ export const addressBookRequests = {
    */
   getAddressBookEntry: async (walletAddress: string, entryId: string) => {
     try {
-      const api = httpRequest()
-      const response = await api.get(`/api/wallet/address-book/${walletAddress}/${entryId}`)
-      return apiResponse(true, 'Address book entry fetched successfully', response.data)
+      const api = httpRequest();
+      const response = await api.get(
+        `/wallet/address-book/${walletAddress}/${entryId}`
+      );
+      return apiResponse(
+        true,
+        'Address book entry fetched successfully',
+        response.data
+      );
     } catch (err: any) {
-      console.log('Error fetching address book entry:', err?.response?.data)
+      console.log('Error fetching address book entry:', err?.response?.data);
       return apiResponse(
         false,
-        err?.response?.data?.message || err?.message || 'Error fetching address book entry',
+        err?.response?.data?.message ||
+          err?.message ||
+          'Error fetching address book entry',
         err
-      )
+      );
     }
   },
 
@@ -48,18 +60,31 @@ export const addressBookRequests = {
    * @param walletAddress The wallet address to add the entry to
    * @param entry The address book entry data
    */
-  addAddressBookEntry: async (walletAddress: string, entry: Omit<AddressBookEntry, 'id'>) => {
+  addAddressBookEntry: async (
+    walletAddress: string,
+    entry: Omit<AddressBookEntry, 'id' | 'created_at' | 'updated_at'>
+  ) => {
     try {
-      const api = httpRequest()
-      const response = await api.post(`/api/wallet/address-book/${walletAddress}`, entry)
-      return apiResponse(true, 'Address book entry added successfully', response.data)
+      console.log('Adding address book entry:', entry, walletAddress);
+      const api = httpRequest();
+      const response = await api.post(
+        `/wallet/address-book/${walletAddress}`,
+        entry
+      );
+      return apiResponse(
+        true,
+        'Address book entry added successfully',
+        response.data
+      );
     } catch (err: any) {
-      console.log('Error adding address book entry:', err?.response?.data)
+      console.log('Error adding address book entry:', err?.response?.data);
       return apiResponse(
         false,
-        err?.response?.data?.message || err?.message || 'Error adding address book entry',
+        err?.response?.data?.message ||
+          err?.message ||
+          'Error adding address book entry',
         err
-      )
+      );
     }
   },
 
@@ -70,21 +95,30 @@ export const addressBookRequests = {
    * @param entry The updated address book entry data
    */
   updateAddressBookEntry: async (
-    walletAddress: string, 
-    entryId: string, 
+    walletAddress: string,
+    entryId: string,
     entry: Partial<Omit<AddressBookEntry, 'id'>>
   ) => {
     try {
-      const api = httpRequest()
-      const response = await api.put(`/api/wallet/address-book/${walletAddress}/${entryId}`, entry)
-      return apiResponse(true, 'Address book entry updated successfully', response.data)
+      const api = httpRequest();
+      const response = await api.put(
+        `/wallet/address-book/${walletAddress}/${entryId}`,
+        entry
+      );
+      return apiResponse(
+        true,
+        'Address book entry updated successfully',
+        response.data
+      );
     } catch (err: any) {
-      console.log('Error updating address book entry:', err?.response?.data)
+      console.log('Error updating address book entry:', err?.response?.data);
       return apiResponse(
         false,
-        err?.response?.data?.message || err?.message || 'Error updating address book entry',
+        err?.response?.data?.message ||
+          err?.message ||
+          'Error updating address book entry',
         err
-      )
+      );
     }
   },
 
@@ -95,16 +129,24 @@ export const addressBookRequests = {
    */
   deleteAddressBookEntry: async (walletAddress: string, entryId: string) => {
     try {
-      const api = httpRequest()
-      const response = await api.delete(`/api/wallet/address-book/${walletAddress}/${entryId}`)
-      return apiResponse(true, 'Address book entry deleted successfully', response.data)
+      const api = httpRequest();
+      const response = await api.delete(
+        `/wallet/address-book/${walletAddress}/${entryId}`
+      );
+      return apiResponse(
+        true,
+        'Address book entry deleted successfully',
+        response.data
+      );
     } catch (err: any) {
-      console.log('Error deleting address book entry:', err?.response?.data)
+      console.log('Error deleting address book entry:', err?.response?.data);
       return apiResponse(
         false,
-        err?.response?.data?.message || err?.message || 'Error deleting address book entry',
+        err?.response?.data?.message ||
+          err?.message ||
+          'Error deleting address book entry',
         err
-      )
+      );
     }
-  }
-}
+  },
+};

@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AddressBookScreen() {
   const { activeWallet } = useAuthStore();
-  const walletAddress = activeWallet?.address || '';
+  const walletAddress = activeWallet?.address;
   const [addressBook, setAddressBook] = useState<AddressBookEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
@@ -115,14 +115,14 @@ export default function AddressBookScreen() {
   const handleSelectAddress = (entry: AddressBookEntry) => {
     if (isSelectionMode && onSelect) {
       // Return to the previous screen with the selected address
-      router.back();
+      router.dismiss();
 
       // Parse the callback function name and call it
       try {
         const callbackFn = JSON.parse(onSelect);
         if (callbackFn && callbackFn.screen && callbackFn.param) {
           // Navigate back to the calling screen with the selected address
-          router.setParams({ [callbackFn.param]: entry.walletAddress });
+          router.setParams({ [callbackFn.param]: entry.address });
         }
       } catch (error) {
         console.error('Error parsing callback:', error);
@@ -135,7 +135,7 @@ export default function AddressBookScreen() {
   const filteredAddressBook = addressBook.filter(
     (entry) =>
       entry.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      entry.walletAddress.toLowerCase().includes(searchText.toLowerCase())
+      entry.address.toLowerCase().includes(searchText.toLowerCase())
   );
 
   const renderItem = ({ item }: { item: AddressBookEntry }) => (
@@ -150,7 +150,7 @@ export default function AddressBookScreen() {
       <View className="flex-1">
         <Text className="text-white font-medium text-lg">{item.name}</Text>
         <Text className="text-gray-400 text-sm" numberOfLines={1}>
-          {item.walletAddress}
+          {item.address}
         </Text>
         {item.description && (
           <Text className="text-gray-500 text-xs mt-1">{item.description}</Text>
@@ -172,7 +172,7 @@ export default function AddressBookScreen() {
   return (
     <SafeAreaView className="flex-1 bg-dark-100">
       <View className="flex-row items-center p-4 border-b border-dark-300">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+        <TouchableOpacity onPress={() => router.dismiss()} className="mr-4">
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <Text className="text-white text-xl font-semibold flex-1">

@@ -1,13 +1,13 @@
 export interface AddressBookEntry {
   id: string;
   name: string;
-  walletAddress: string;
+  address: string;
   description?: string;
-  network?: string; // e.g., "solana", "soon", etc.
+  network: string; // e.g., "solana", "soon", etc.
   tags: string[];
-  isFavorite?: boolean;
-  createdAt: number; // timestamp
-  updatedAt: number; // timestamp
+  is_favorite?: boolean;
+  created_at: number; // timestamp
+  updated_at: number; // timestamp
 }
 
 export interface AddressBookResponse {
