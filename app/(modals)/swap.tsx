@@ -114,12 +114,6 @@ export default function SwapModal() {
   } = useQuery({
     queryKey: ['jupiterQuote', fromToken?.address, toToken?.address, amount],
     queryFn: async () => {
-      // Check if we have wallets from Privy
-      if (!wallets || wallets.length === 0) {
-        console.log('No Privy wallets available');
-        return null;
-      }
-
       // Get the active wallet address from Privy
       const privyWalletAddress = activeWallet?.address;
 
