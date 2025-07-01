@@ -1,8 +1,11 @@
 import { addressBookRequests } from '@/libs/api_requests/address-book.request';
+import { isValidSolanaAddress } from '@/libs/solana.lib';
+import { useAddressBookStore } from '@/store/addressBookStore';
 import { useAuthStore } from '@/store/authStore';
+import { AddressBookEntry } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,13 +21,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function EditAddressScreen() {
+  // Route params
   const { entryId } = useLocalSearchParams<{ entryId: string }>();
+
+  // Store access
   const { activeWallet } = useAuthStore();
+  const { entries, addEntry, updateEntry } = useAddressBookStore();
   const walletAddress = activeWallet?.address;
 
+  // Form state
   const [isLoading, setIsLoading] = useState(false);
   const [loadingEntry, setLoadingEntry] = useState(!!entryId);
-
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
@@ -33,39 +40,62 @@ export default function EditAddressScreen() {
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
 
+  const [originalValues, setOriginalValues] = useState<{
+    name: string;
+    address: string;
+    description: string;
+    network: string;
+    isFavorite: boolean;
+    tags: string[];
+  }>({
+    name: '',
+    address: '',
+    description: '',
+    network: 'solana',
+    isFavorite: false,
+    tags: [],
+  });
+
+  // Load address book entry if entryId is provided
   useEffect(() => {
-    if (entryId && walletAddress) {
-      fetchAddressDetails();
-    } else {
-      setLoadingEntry(false);
+    if (entryId) {
+      loadAddressFromStore(entryId);
     }
-  }, [entryId, walletAddress]);
+    // For new entries, original values were already initialized with defaults
+  }, [entryId, entries]);
 
-  const fetchAddressDetails = async () => {
-    if (!walletAddress || !entryId) return;
-
+  // Load address from store instead of making API request
+  const loadAddressFromStore = (id: string) => {
     setLoadingEntry(true);
     try {
-      const response = await addressBookRequests.getAddressBookEntry(
-        walletAddress,
-        entryId
-      );
+      // Find the entry in the store
+      const entry = entries.find((e) => e.id === id);
 
-      if (response.success && response.data) {
-        const entry = response.data;
-        setName(entry.name || '');
-        setAddress(entry.walletAddress || '');
+      if (entry) {
+        // Set form fields
+        setName(entry.name);
+        setAddress(entry.address);
         setDescription(entry.description || '');
         setNetwork(entry.network || 'solana');
-        setIsFavorite(entry.isFavorite || false);
+        setIsFavorite(entry.is_favorite || false);
         setTags(entry.tags || []);
+
+        // Store original values for change detection
+        setOriginalValues({
+          name: entry.name,
+          address: entry.address,
+          description: entry.description || '',
+          network: entry.network || 'solana',
+          isFavorite: entry.is_favorite || false,
+          tags: entry.tags || [],
+        });
       } else {
-        console.error('Failed to fetch address details:', response.message);
+        console.error('Address not found in store:', id);
         Alert.alert('Error', 'Failed to load address details');
         router.dismiss();
       }
     } catch (error) {
-      console.error('Error fetching address details:', error);
+      console.error('Error loading address details from store:', error);
       Alert.alert('Error', 'Failed to load address details');
       router.dismiss();
     } finally {
@@ -97,10 +127,7 @@ export default function EditAddressScreen() {
       Alert.alert('Error', 'Please enter a wallet address');
       return false;
     }
-    if (
-      network === 'solana' &&
-      !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)
-    ) {
+    if (network === 'solana' && !isValidSolanaAddress(address)) {
       Alert.alert(
         'Warning',
         'The wallet address format looks invalid. Do you want to continue anyway?',
@@ -118,12 +145,15 @@ export default function EditAddressScreen() {
   const saveAddress = async () => {
     if (!walletAddress || !validate()) return;
 
-    const entryData = {
+    const entryData: Omit<
+      AddressBookEntry,
+      'id' | 'created_at' | 'updated_at'
+    > = {
       name,
       address,
       description,
       network,
-      isFavorite,
+      is_favorite: isFavorite,
       tags,
     };
 
@@ -134,36 +164,87 @@ export default function EditAddressScreen() {
       if (entryId) {
         // Update existing entry
         response = await addressBookRequests.updateAddressBookEntry(
-          walletAddress,
           entryId,
           entryData
         );
+
+        // Update entry in store if API call was successful
+        if (response.success && response.data) {
+          // Make sure to preserve any fields that might be in the store but not returned by the API
+          const existingEntry = entries.find((e) => e.id === entryId);
+          const mergedEntry = {
+            ...existingEntry,
+            ...response.data,
+            is_favorite: isFavorite, // Ensure favorite status is updated
+          };
+
+          updateEntry(entryId, mergedEntry);
+        }
       } else {
         // Create new entry
-        response = await addressBookRequests.addAddressBookEntry(
-          walletAddress,
-          entryData
-        );
+        response = await addressBookRequests.addAddressBookEntry(entryData);
+
+        // Add new entry to store if API call was successful
+        if (response.success && response.data) {
+          addEntry(response.data);
+        }
       }
 
       if (response.success) {
-        Alert.alert(
-          'Success',
-          entryId
-            ? 'Address updated successfully'
-            : 'Address added successfully'
-        );
-        router.dismiss();
+        // Small delay to ensure store is updated before dismissing
+        setTimeout(() => {
+          Alert.alert(
+            'Success',
+            entryId
+              ? 'Address updated successfully'
+              : 'Address added successfully',
+            [{ text: 'OK', onPress: () => router.dismiss() }]
+          );
+        }, 100);
       } else {
         Alert.alert('Error', response.message || 'Failed to save address');
       }
-    } catch (error) {
-      console.error('Error saving address:', error);
-      Alert.alert('Error', 'Failed to save address');
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to save address';
+      console.error('Error saving address:', errorMessage);
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Detect if any changes were made compared to the original values
+  const hasChanges = useMemo(() => {
+    // For a new address (no entryId), any valid input is a change
+    if (!entryId) {
+      return name.trim() !== '' && address.trim() !== '';
+    }
+
+    // For existing addresses, compare current form values with original values
+    return (
+      name !== originalValues.name ||
+      address !== originalValues.address ||
+      description !== originalValues.description ||
+      network !== originalValues.network ||
+      isFavorite !== originalValues.isFavorite ||
+      // Compare tags (order might be different, so we check length and contents)
+      tags.length !== originalValues.tags.length ||
+      !tags.every((tag) => originalValues.tags.includes(tag)) ||
+      !originalValues.tags.every((tag) => tags.includes(tag))
+    );
+  }, [
+    name,
+    address,
+    description,
+    network,
+    isFavorite,
+    tags,
+    originalValues,
+    entryId,
+  ]);
 
   if (loadingEntry) {
     return (
@@ -194,10 +275,24 @@ export default function EditAddressScreen() {
           </Text>
           <TouchableOpacity
             onPress={saveAddress}
-            disabled={isLoading}
-            className={isLoading ? 'opacity-50' : ''}
+            disabled={
+              isLoading ||
+              !hasChanges ||
+              name.trim() === '' ||
+              address.trim() === ''
+            }
+            className={
+              isLoading ||
+              !hasChanges ||
+              name.trim() === '' ||
+              address.trim() === ''
+                ? 'opacity-50'
+                : ''
+            }
           >
-            <Text className="text-primary-500 font-medium text-lg">
+            <Text
+              className={`font-medium text-lg ${isLoading || !hasChanges || name.trim() === '' || address.trim() === '' ? 'text-gray-500' : 'text-primary-500'}`}
+            >
               {isLoading ? 'Saving...' : 'Save'}
             </Text>
           </TouchableOpacity>

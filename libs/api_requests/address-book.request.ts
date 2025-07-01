@@ -4,22 +4,22 @@ import { apiResponse, httpRequest } from '../api.helpers';
 export const addressBookRequests = {
   /**
    * Get all address book entries for a wallet
-   * @param walletAddress The wallet address to get entries for
    */
-  getAddressBook: async (walletAddress: string) => {
+  getAddressBook: async () => {
     try {
       const api = httpRequest();
-      const response = await api.get(`/wallet/address-book/${walletAddress}`);
-      return apiResponse(
+      const response = await api.get(`/wallet/address-book`);
+      return apiResponse<AddressBookEntry[]>(
         true,
         'Address book entries fetched successfully',
-        response.data
+        response.data.data
       );
     } catch (err: any) {
       console.log('Error fetching address book entries:', err?.response?.data);
       return apiResponse(
         false,
-        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+          err?.response?.data?.message ||
           err?.message ||
           'Error fetching address book entries',
         err
@@ -29,25 +29,23 @@ export const addressBookRequests = {
 
   /**
    * Get a specific address book entry
-   * @param walletAddress The wallet address the entry belongs to
    * @param entryId The ID of the specific entry
    */
-  getAddressBookEntry: async (walletAddress: string, entryId: string) => {
+  getAddressBookEntry: async (entryId: string) => {
     try {
       const api = httpRequest();
-      const response = await api.get(
-        `/wallet/address-book/${walletAddress}/${entryId}`
-      );
-      return apiResponse(
+      const response = await api.get(`/wallet/address-book/${entryId}`);
+      return apiResponse<{ data: AddressBookEntry }>(
         true,
         'Address book entry fetched successfully',
-        response.data
+        response.data.data
       );
     } catch (err: any) {
       console.log('Error fetching address book entry:', err?.response?.data);
       return apiResponse(
         false,
-        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+          err?.response?.data?.message ||
           err?.message ||
           'Error fetching address book entry',
         err
@@ -57,30 +55,25 @@ export const addressBookRequests = {
 
   /**
    * Add a new address book entry
-   * @param walletAddress The wallet address to add the entry to
    * @param entry The address book entry data
    */
   addAddressBookEntry: async (
-    walletAddress: string,
     entry: Omit<AddressBookEntry, 'id' | 'created_at' | 'updated_at'>
   ) => {
     try {
-      console.log('Adding address book entry:', entry, walletAddress);
       const api = httpRequest();
-      const response = await api.post(
-        `/wallet/address-book/${walletAddress}`,
-        entry
-      );
-      return apiResponse(
+      const response = await api.post(`/wallet/address-book`, entry);
+      return apiResponse<AddressBookEntry>(
         true,
         'Address book entry added successfully',
-        response.data
+        response.data.data
       );
     } catch (err: any) {
       console.log('Error adding address book entry:', err?.response?.data);
       return apiResponse(
         false,
-        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+          err?.response?.data?.message ||
           err?.message ||
           'Error adding address book entry',
         err
@@ -90,31 +83,30 @@ export const addressBookRequests = {
 
   /**
    * Update an existing address book entry
-   * @param walletAddress The wallet address the entry belongs to
    * @param entryId The ID of the entry to update
    * @param entry The updated address book entry data
    */
   updateAddressBookEntry: async (
-    walletAddress: string,
     entryId: string,
     entry: Partial<Omit<AddressBookEntry, 'id'>>
   ) => {
     try {
       const api = httpRequest();
-      const response = await api.put(
-        `/wallet/address-book/${walletAddress}/${entryId}`,
+      const response = await api.patch(
+        `/wallet/address-book/${entryId}`,
         entry
       );
-      return apiResponse(
+      return apiResponse<AddressBookEntry>(
         true,
         'Address book entry updated successfully',
-        response.data
+        response.data.data
       );
     } catch (err: any) {
       console.log('Error updating address book entry:', err?.response?.data);
       return apiResponse(
         false,
-        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+          err?.response?.data?.message ||
           err?.message ||
           'Error updating address book entry',
         err
@@ -124,28 +116,26 @@ export const addressBookRequests = {
 
   /**
    * Delete an address book entry
-   * @param walletAddress The wallet address the entry belongs to
    * @param entryId The ID of the entry to delete
    */
-  deleteAddressBookEntry: async (walletAddress: string, entryId: string) => {
+  deleteAddressBookEntry: async (entryId: string) => {
     try {
       const api = httpRequest();
-      const response = await api.delete(
-        `/wallet/address-book/${walletAddress}/${entryId}`
-      );
-      return apiResponse(
+      await api.delete(`/wallet/address-book/${entryId}`);
+      return apiResponse<boolean>(
         true,
         'Address book entry deleted successfully',
-        response.data
+        true
       );
     } catch (err: any) {
       console.log('Error deleting address book entry:', err?.response?.data);
-      return apiResponse(
+      return apiResponse<boolean>(
         false,
-        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+          err?.response?.data?.message ||
           err?.message ||
           'Error deleting address book entry',
-        err
+        false
       );
     }
   },

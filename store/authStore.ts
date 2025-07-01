@@ -1,32 +1,30 @@
-import { PrivyWalletAccount } from '@/types'
-import { PrivyUser } from '@privy-io/expo'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
-
-// export interface User {
-//   [key: string]: any
-// }
+import { PrivyWalletAccount, User } from '@/types';
+import { PrivyUser } from '@privy-io/expo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface AuthState {
   // Auth state
-  user: PrivyUser | null
-  activeWallet: PrivyWalletAccount | null
-  isAuthenticated: boolean
-  isReady: boolean
-  lastSync: number | null
+  user: PrivyUser | null;
+  backendProfile: User | null;
+  activeWallet: PrivyWalletAccount | null;
+  isAuthenticated: boolean;
+  isReady: boolean;
+  lastSync: number | null;
 
   // Getters
-  wallets: PrivyWalletAccount[]
+  wallets: PrivyWalletAccount[];
 
   // Actions
-  setUser: (user: PrivyUser | null) => void
-  setAuthenticated: (isAuthenticated: boolean) => void
-  setReady: (isReady: boolean) => void
-  setActiveWallet: (wallet: PrivyWalletAccount | null) => void
-  updateFromPrivy: (privyUser: any, privyIsReady: boolean) => void
-  logout: () => void
-  clearStore: () => void
+  setUser: (user: PrivyUser | null) => void;
+  setBackendProfile: (profile: User | null) => void;
+  setAuthenticated: (isAuthenticated: boolean) => void;
+  setReady: (isReady: boolean) => void;
+  setActiveWallet: (wallet: PrivyWalletAccount | null) => void;
+  updateFromPrivy: (privyUser: any, privyIsReady: boolean) => void;
+  logout: () => void;
+  clearStore: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -34,6 +32,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       // Initial state
       user: null,
+      backendProfile: null,
       activeWallet: null,
       isAuthenticated: false,
       isReady: false,
@@ -41,13 +40,13 @@ export const useAuthStore = create<AuthState>()(
 
       // Getter for wallets from user.linked_accounts
       get wallets() {
-        const state = get()
-        if (!state.user?.linked_accounts) return []
+        const state = get();
+        if (!state.user?.linked_accounts) return [];
 
         return state.user.linked_accounts.filter(
           (account: any): account is PrivyWalletAccount =>
             account.type === 'wallet'
-        )
+        );
       },
 
       // Actions
@@ -56,35 +55,41 @@ export const useAuthStore = create<AuthState>()(
           user?.linked_accounts?.filter(
             (account: any): account is PrivyWalletAccount =>
               account.type === 'wallet'
-          ) || []
+          ) || [];
 
         set({
           user,
           isAuthenticated: !!user,
           activeWallet: wallets.length > 0 ? wallets[0] : null,
           lastSync: Date.now(),
-        })
+        });
+      },
+
+      setBackendProfile: (profile) => {
+        set({
+          backendProfile: profile,
+        });
       },
 
       setAuthenticated: (isAuthenticated) => {
-        set({ isAuthenticated })
+        set({ isAuthenticated });
       },
 
       setReady: (isReady) => {
-        set({ isReady })
+        set({ isReady });
       },
 
       setActiveWallet: (wallet) => {
-        set({ activeWallet: wallet })
+        set({ activeWallet: wallet });
       },
 
       updateFromPrivy: (privyUser, privyIsReady) => {
-        const currentState = get()
+        const currentState = get();
 
         set({
           isReady: privyIsReady,
           lastSync: Date.now(),
-        })
+        });
 
         // Only update user data if Privy is ready
         if (privyIsReady) {
@@ -94,19 +99,19 @@ export const useAuthStore = create<AuthState>()(
               privyUser?.linked_accounts?.filter(
                 (account: any): account is PrivyWalletAccount =>
                   account.type === 'wallet'
-              ) || []
+              ) || [];
 
             set({
               user: privyUser,
               isAuthenticated: true,
               activeWallet: wallets.length > 0 ? wallets[0] : null,
-            })
+            });
           } else if (currentState.isAuthenticated) {
             // Privy says no user but we think we're authenticated
             // This might mean the user was logged out elsewhere
             console.log(
               'Privy user is null but local state shows authenticated - keeping local state for offline mode'
-            )
+            );
             // Keep local state for offline mode, don't clear it
           }
         }
@@ -115,20 +120,22 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         set({
           user: null,
+          backendProfile: null,
           activeWallet: null,
           isAuthenticated: false,
           lastSync: Date.now(),
-        })
+        });
       },
 
       clearStore: () => {
         set({
           user: null,
+          backendProfile: null,
           activeWallet: null,
           isAuthenticated: false,
           isReady: false,
           lastSync: null,
-        })
+        });
       },
     }),
     {
@@ -137,10 +144,11 @@ export const useAuthStore = create<AuthState>()(
       // Only persist essential auth data
       partialize: (state) => ({
         user: state.user,
+        backendProfile: state.backendProfile,
         activeWallet: state.activeWallet,
         isAuthenticated: state.isAuthenticated,
         lastSync: state.lastSync,
       }),
     }
   )
-)
+);

@@ -1,13 +1,16 @@
 import { addressBookRequests } from '@/libs/api_requests/address-book.request';
+import { useAddressBookStore } from '@/store/addressBookStore';
 import { useAuthStore } from '@/store/authStore';
 import { AddressBookEntry } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { formatWalletAddress } from '@privy-io/expo';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  RefreshControl,
   Text,
   TextInput,
   TouchableOpacity,
@@ -18,9 +21,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function AddressBookScreen() {
   const { activeWallet } = useAuthStore();
   const walletAddress = activeWallet?.address;
-  const [addressBook, setAddressBook] = useState<AddressBookEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const {
+    entries: addressBook,
+    isLoading,
+    loadAddressBook,
+    removeEntry,
+  } = useAddressBookStore();
+
   const [searchText, setSearchText] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const { selectMode, onSelect } = useLocalSearchParams<{
     selectMode?: string;
     onSelect?: string;
@@ -28,34 +39,28 @@ export default function AddressBookScreen() {
 
   const isSelectionMode = selectMode === 'true';
 
-  useEffect(() => {
-    if (walletAddress) {
-      fetchAddressBook();
-    } else {
-      setIsLoading(false);
-    }
-  }, [walletAddress]);
-
-  const fetchAddressBook = async () => {
-    if (!walletAddress) return;
-
-    setIsLoading(true);
-    try {
-      const response = await addressBookRequests.getAddressBook(walletAddress);
-
-      if (response.success && response.data) {
-        setAddressBook(response.data.entries || []);
-      } else {
-        console.error('Failed to fetch address book:', response.message);
-        setAddressBook([]);
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (walletAddress) {
+        console.log('Address book screen focused - checking if refresh needed');
+        loadAddressBook();
       }
+      return () => {};
+    }, [walletAddress, loadAddressBook])
+  );
+
+  // Handle pull-to-refresh action
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadAddressBook(true);
     } catch (error) {
-      console.error('Error fetching address book:', error);
-      setAddressBook([]);
+      console.error('Error refreshing address book:', error);
     } finally {
-      setIsLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [loadAddressBook]);
 
   const handleAddAddress = () => {
     router.push({
@@ -70,7 +75,49 @@ export default function AddressBookScreen() {
     });
   };
 
+  // Separate function to handle the actual deletion process
+  const deleteAddressEntry = async (id: string) => {
+    if (!walletAddress) return;
+
+    // Only set deleting state if not already deleting this entry
+    if (deletingId !== id) {
+      setDeletingId(id);
+    }
+
+    try {
+      console.log(`Sending delete request for address ID: ${id}`);
+      const response = await addressBookRequests.deleteAddressBookEntry(id);
+
+      if (response.success) {
+        // Update the store if API call succeeded
+        removeEntry(id);
+        // Alert with a slight delay to ensure store is updated first
+        setTimeout(() => {
+          Alert.alert('Success', 'Address deleted successfully');
+        }, 100);
+      } else {
+        Alert.alert('Error', response.message || 'Failed to delete address');
+      }
+    } catch (error: any) {
+      // Check if error is related to record not found (already deleted)
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to delete address';
+      if (!errorMessage.includes('not found')) {
+        Alert.alert('Error', errorMessage);
+      }
+    } finally {
+      // Always clear the deleting state
+      setDeletingId(null);
+    }
+  };
+
+  // Handler for delete button press that shows confirmation
   const handleDeleteAddress = (entry: AddressBookEntry) => {
+    // Prevent multiple alerts if already in process of deleting
+    if (deletingId === entry.id) return;
+
     Alert.alert(
       'Delete Address',
       `Are you sure you want to delete "${entry.name}" from your address book?`,
@@ -79,34 +126,8 @@ export default function AddressBookScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            if (!walletAddress) return;
-
-            setIsLoading(true);
-            try {
-              const response = await addressBookRequests.deleteAddressBookEntry(
-                walletAddress,
-                entry.id
-              );
-
-              if (response.success) {
-                setAddressBook((prev) =>
-                  prev.filter((item) => item.id !== entry.id)
-                );
-                Alert.alert('Success', 'Address deleted successfully');
-              } else {
-                Alert.alert(
-                  'Error',
-                  response.message || 'Failed to delete address'
-                );
-              }
-            } catch (error) {
-              console.error('Error deleting address:', error);
-              Alert.alert('Error', 'Failed to delete address');
-            } finally {
-              setIsLoading(false);
-            }
-          },
+          // Use a simple reference to the function instead of an inline async function
+          onPress: () => deleteAddressEntry(entry.id),
         },
       ]
     );
@@ -143,14 +164,21 @@ export default function AddressBookScreen() {
       className="flex-row items-center bg-dark-200 rounded-2xl p-4 mb-2"
       onPress={() => handleSelectAddress(item)}
     >
-      <View className="w-10 h-10 bg-primary-500/20 rounded-full justify-center items-center mr-4">
-        <Text className="text-lg">{item.name.charAt(0)}</Text>
+      <View className="w-10 h-10 bg-primary-500/70 rounded-full justify-center items-center mr-4">
+        <Text className="text-lg text-white/70">{item.name.charAt(0)}</Text>
       </View>
 
       <View className="flex-1">
-        <Text className="text-white font-medium text-lg">{item.name}</Text>
-        <Text className="text-gray-400 text-sm" numberOfLines={1}>
-          {item.address}
+        <View className="flex-row items-center">
+          <Text className="text-white font-semibold text-base mr-2">
+            {item.name}
+          </Text>
+          {item.is_favorite && (
+            <Ionicons name="star" size={16} color="#F9A826" />
+          )}
+        </View>
+        <Text className="text-gray-400">
+          {formatWalletAddress(item.address)}
         </Text>
         {item.description && (
           <Text className="text-gray-500 text-xs mt-1">{item.description}</Text>
@@ -158,13 +186,30 @@ export default function AddressBookScreen() {
       </View>
 
       {!isSelectionMode && (
-        <TouchableOpacity
-          className="p-2"
-          onPress={() => handleDeleteAddress(item)}
-          hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-        >
-          <Ionicons name="trash-outline" size={20} color="#ef4444" />
-        </TouchableOpacity>
+        <View className="flex-row">
+          {/* Edit button */}
+          <TouchableOpacity
+            className="p-2 mr-1"
+            onPress={() => handleEditAddress(item)}
+            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+          >
+            <Ionicons name="pencil-outline" size={20} color="#6366f1" />
+          </TouchableOpacity>
+
+          {/* Delete button */}
+          <TouchableOpacity
+            className="p-2"
+            onPress={() => handleDeleteAddress(item)}
+            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+            disabled={deletingId === item.id}
+          >
+            {deletingId === item.id ? (
+              <ActivityIndicator size="small" color="#ef4444" />
+            ) : (
+              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+            )}
+          </TouchableOpacity>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -199,41 +244,44 @@ export default function AddressBookScreen() {
           </View>
         </View>
 
-        {isLoading ? (
-          <View className="flex-1 justify-center items-center p-8">
-            <ActivityIndicator size="large" color="#6366f1" />
-          </View>
-        ) : filteredAddressBook.length > 0 ? (
-          <FlatList
-            data={filteredAddressBook}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
-          />
-        ) : (
-          <View className="mt-12 justify-center items-center p-6">
-            <View className="w-20 h-20 bg-dark-300 rounded-full justify-center items-center mb-6">
-              <Ionicons name="people-outline" size={36} color="#6366f1" />
-            </View>
-            <Text className="text-white text-lg font-medium text-center mb-2">
-              No addresses found
-            </Text>
-            <Text className="text-gray-400 text-center mb-6">
-              {searchText
-                ? 'No addresses match your search criteria'
-                : 'Add addresses to your address book for quick access'}
-            </Text>
-            {!isSelectionMode && !searchText && (
-              <TouchableOpacity
-                className="bg-primary-500 rounded-full px-6 py-3"
-                onPress={handleAddAddress}
-              >
-                <Text className="text-white font-medium">Add Address</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
+        <FlatList
+          data={filteredAddressBook}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          className="w-full"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#6366f1"
+              colors={['#6366f1']}
+              progressBackgroundColor="#1e1e24"
+            />
+          }
+          ListEmptyComponent={
+            isLoading ? (
+              <View className="flex-1 justify-center items-center py-8">
+                <ActivityIndicator size="large" color="#6366f1" />
+              </View>
+            ) : (
+              <View className="flex-1 justify-center items-center py-8">
+                <Text className="text-white text-center">
+                  {searchText.length > 0
+                    ? 'No addresses match your search criteria'
+                    : 'Add addresses to your address book for quick access'}
+                </Text>
+                {!isSelectionMode && !searchText && (
+                  <TouchableOpacity
+                    className="bg-primary-500 rounded-full px-6 py-3 mt-4"
+                    onPress={handleAddAddress}
+                  >
+                    <Text className="text-white font-medium">Add Address</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )
+          }
+        />
       </View>
     </SafeAreaView>
   );
