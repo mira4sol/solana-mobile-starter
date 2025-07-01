@@ -1,3 +1,4 @@
+import { ENV } from '@/constants/Env'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { clusterApiUrl } from '@solana/web3.js'
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
@@ -31,6 +32,11 @@ export function toWalletAdapterNetwork(
 }
 
 export const defaultClusters: Readonly<Cluster[]> = [
+  {
+    name: 'mainnet',
+    endpoint: ENV.RPC_URL,
+    network: ClusterNetwork.Mainnet,
+  },
   {
     name: 'devnet',
     endpoint: clusterApiUrl('devnet'),
@@ -82,11 +88,11 @@ export function useCluster() {
 function getClusterUrlParam(cluster: Cluster): string {
   let suffix = ''
   switch (cluster.network) {
-    case ClusterNetwork.Devnet:
-      suffix = 'devnet'
-      break
     case ClusterNetwork.Mainnet:
       suffix = ''
+      break
+    case ClusterNetwork.Devnet:
+      suffix = 'devnet'
       break
     case ClusterNetwork.Testnet:
       suffix = 'testnet'
