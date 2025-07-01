@@ -1,7 +1,7 @@
 import { ENV } from './Env';
 
 export const Keys = {
-  PRIVY_ACCESS_TOKEN: 'privy_access_token',
+  PRIVY_IDENTITY_TOKEN: 'privy_identity_token',
 };
 
 export const blurHashPlaceholder =

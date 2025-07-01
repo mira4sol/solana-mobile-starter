@@ -1,4 +1,6 @@
 import { ApiResponseInterface } from './api_response'
+import { AddressBookEntry, AddressBookResponse } from './address-book.interface'
+import { User, CreateUserDto, UpdateUserDto } from './user.interface'
 import {
   BirdEyeBalanceChange,
   BirdEyeContractLabel,
@@ -33,7 +35,12 @@ import { PrivyWalletAccount } from './misc'
 import { Risk, RugResponse, TokenHolder } from './rug.interface'
 
 export {
+  AddressBookEntry,
+  AddressBookResponse,
   ApiResponseInterface,
+  User,
+  CreateUserDto,
+  UpdateUserDto,
   BirdEyeBalanceChange,
   BirdEyeContractLabel,
   BirdEyeHistoricalPriceItem,
