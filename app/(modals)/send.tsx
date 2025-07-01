@@ -1,8 +1,10 @@
 import ContactCard from '@/components/ContactCard';
-import SendTokenSelector from '@/components/SendTokenSelector';
+import { TokenItem } from '@/components/TokenSearch';
+import TokenSelector from '@/components/TokenSelector';
 import CustomButton from '@/components/ui/CustomButton';
 import { blurHashPlaceholder } from '@/constants/App';
 import { ENV } from '@/constants/Env';
+import { useConnection } from '@/contexts/ConnectionProvider';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import {
   calculateFee,
@@ -63,6 +65,7 @@ export default function SendScreen() {
     isLoading: portfolioLoading,
     isRefetching,
   } = usePortfolio();
+  const { connection } = useConnection();
   const { activeWallet } = useAuthStore();
   const { user } = usePrivy();
   const { wallets } = useEmbeddedSolanaWallet();
@@ -297,7 +300,7 @@ export default function SendScreen() {
         selectedToken: selectedToken?.symbol,
         recipient,
         tokenAmount,
-        walletAddress: embeddedWallet?.address,
+        walletAddress: activeWallet?.address,
       });
       setTransactionFee(0.000005); // Fallback to default fee
     } finally {
@@ -327,7 +330,7 @@ export default function SendScreen() {
   };
 
   const handleConfirmSend = async () => {
-    if (!selectedToken || !recipient || !tokenAmount || !embeddedWallet) {
+    if (!selectedToken || !recipient || !tokenAmount || !activeWallet) {
       Alert.alert('Error', 'Missing required transaction data');
       return;
     }
@@ -351,7 +354,7 @@ export default function SendScreen() {
         selectedToken,
         recipient,
         tokenAmount,
-        embeddedWallet.address
+        activeWallet.address
       );
 
       // Send the transaction using Privy
@@ -359,7 +362,7 @@ export default function SendScreen() {
         method: 'signAndSendTransaction',
         params: {
           transaction,
-          connection,
+          connection: getConnection(),
         },
       });
 
@@ -516,7 +519,6 @@ export default function SendScreen() {
               text={isSending ? 'Sending...' : 'Confirm & Send'}
               onPress={handleConfirmSend}
               disabled={isSending}
-              disableGradient
             />
           </ScrollView>
         </View>
@@ -556,10 +558,21 @@ export default function SendScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Token Selector */}
-          <SendTokenSelector
-            selectedToken={selectedToken}
-            tokens={availableTokens}
-            onTokenSelect={setSelectedToken}
+          <TokenSelector
+            selectedToken={selectedToken as TokenItem | null}
+            tokens={portfolio?.items as TokenItem[]}
+            onTokenSelect={(token: TokenItem) => {
+              // Find the original BirdEyeTokenItem from our list
+              const originalToken = availableTokens.find(
+                (t) => t.address === token.address
+              );
+              if (originalToken) {
+                setSelectedToken(originalToken);
+              }
+            }}
+            label="Token"
+            showBalance={true}
+            className="mb-4"
           />
 
           {/* Recent Contacts */}

@@ -1,10 +1,11 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import {
   JupiterExecuteOrderResponse,
   JupiterOrderRequest,
   JupiterQuoteOrderResponse,
 } from '../../types';
 import { apiResponse } from '../api.helpers';
+import { NATIVE_SOL_MINT, WRAPPED_SOL_MINT } from '../solana.lib';
 
 const api: AxiosInstance = axios.create({
   baseURL: 'https://lite-api.jup.ag/ultra/v1',
@@ -13,28 +14,30 @@ const api: AxiosInstance = axios.create({
 export const jupiterRequests = {
   getOrder: async (params: JupiterOrderRequest) => {
     try {
+      console.log('Fetching Jupiter order quote', params);
+
       const res = await api.get<JupiterQuoteOrderResponse>('/order', {
         params: {
-          inputMint: params.inputMint,
-          outputMint: params.outputMint,
+          inputMint:
+            params.inputMint === NATIVE_SOL_MINT
+              ? WRAPPED_SOL_MINT
+              : params.inputMint,
+          outputMint:
+            params.outputMint === NATIVE_SOL_MINT
+              ? WRAPPED_SOL_MINT
+              : params.outputMint,
           amount: params.amount,
           taker: params.taker,
-          referralAccount: params.referralAccount,
-          referralFee: params.referralFee,
+          // TODO
+          // referralAccount: '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9',
+          // referralFee: 100,
         },
       });
 
       return apiResponse(true, 'Fetched Jupiter order quote', res.data);
     } catch (err: any) {
       console.log('Error fetching Jupiter order quote:', err?.response?.data);
-      if (err instanceof AxiosError) {
-        console.log('WEEEE', err?.response);
-      }
-      return apiResponse(
-        false,
-        err?.response?.data?.message || err?.message || 'Error occurred.',
-        err
-      );
+      return apiResponse(false, 'Failed to get quote.', err);
     }
   },
 

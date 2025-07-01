@@ -1,11 +1,18 @@
+import { TokenItem } from '@/components/TokenSearch';
+import TokenSelector from '@/components/TokenSelector';
 import { usePortfolio } from '@/hooks/usePortfolio';
+import { birdEyeRequests } from '@/libs/api_requests/birdeye.request';
 import { jupiterRequests } from '@/libs/api_requests/jupiter.request';
 import { useAuthStore } from '@/store/authStore';
-import { JupiterOrderRequest, JupiterQuoteOrderResponse } from '@/types';
+import {
+  BirdEyeTokenItem,
+  BirdEyeTokenOverview,
+  JupiterOrderRequest,
+  JupiterQuoteOrderResponse,
+} from '@/types';
 import { formatUSD } from '@/utils/formatters';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useEmbeddedEthereumWallet, usePrivy } from '@privy-io/expo';
-import { Connection } from '@solana/web3.js';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -29,10 +36,35 @@ export default function SwapModal() {
   const { user } = usePrivy();
 
   // Token selection states
-  const [fromToken, setFromToken] = useState<any>(null);
-  const [toToken, setToToken] = useState<any>(null);
+  const [fromToken, setFromToken] = useState<TokenItem | null>(null);
+  const [toToken, setToToken] = useState<TokenItem | null>(null);
   const [amount, setAmount] = useState('');
   const [slippage, setSlippage] = useState(0.5); // 0.5% default slippage
+
+  // Store complete token details with accurate decimals
+  const [fromTokenDetails, setFromTokenDetails] =
+    useState<BirdEyeTokenOverview | null>(null);
+  const [toTokenDetails, setToTokenDetails] =
+    useState<BirdEyeTokenOverview | null>(null);
+  const [fetchingTokenDetails, setFetchingTokenDetails] = useState(false);
+
+  // Convert tokens to TokenItem format for our reusable component
+  const adaptTokenForSelector = (token: any): TokenItem | null => {
+    if (!token) return null;
+    return {
+      address: token.address,
+      name: token.name || token.symbol || 'Unknown Token',
+      symbol: token.symbol || '',
+      logoURI: token.logoURI || '',
+      balance: token.balance || token.uiAmount * Math.pow(10, token.decimals),
+      decimals: token.decimals,
+      price: token.priceUsd,
+      valueUsd: token.valueUsd,
+    };
+  };
+
+  const adaptedFromToken = adaptTokenForSelector(fromToken);
+  const adaptedToToken = adaptTokenForSelector(toToken);
 
   // Swap states
   const [quoteResponse, setQuoteResponse] =
@@ -44,10 +76,10 @@ export default function SwapModal() {
   useEffect(() => {
     if (params.tokenAddress && portfolio) {
       const token = portfolio.items.find(
-        (item: any) => item.tokenAddress === params.tokenAddress
+        (item: BirdEyeTokenItem) => item.address === params.tokenAddress
       );
       if (token) {
-        setFromToken(token);
+        setFromToken(token as TokenItem);
       }
     }
   }, [params.tokenAddress, portfolio]);
@@ -57,7 +89,7 @@ export default function SwapModal() {
     if (params.fromToken) {
       try {
         const token = JSON.parse(params.fromToken as string);
-        setFromToken(token);
+        setFromToken(token as TokenItem);
       } catch (error) {
         console.error('Error parsing fromToken:', error);
       }
@@ -66,7 +98,7 @@ export default function SwapModal() {
     if (params.toToken) {
       try {
         const token = JSON.parse(params.toToken as string);
-        setToToken(token);
+        setToToken(token as TokenItem);
       } catch (error) {
         console.error('Error parsing toToken:', error);
       }
@@ -80,22 +112,16 @@ export default function SwapModal() {
     error: quoteError,
     refetch: refetchQuote,
   } = useQuery({
-    queryKey: [
-      'jupiterQuote',
-      fromToken?.tokenAddress,
-      toToken?.tokenAddress,
-      amount,
-    ],
+    queryKey: ['jupiterQuote', fromToken?.address, toToken?.address, amount],
     queryFn: async () => {
       // Check if we have wallets from Privy
-      // if (!wallets || wallets.length === 0) {
-      //   console.log('No Privy wallets available');
-      //   return null;
-      // }
+      if (!wallets || wallets.length === 0) {
+        console.log('No Privy wallets available');
+        return null;
+      }
 
       // Get the active wallet address from Privy
-      // const privyWalletAddress = wallets[0]?.address;
-      const privyWalletAddress = '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9';
+      const privyWalletAddress = activeWallet?.address;
 
       if (
         !fromToken ||
@@ -115,19 +141,21 @@ export default function SwapModal() {
         return null;
       }
 
+      // Use token details decimals if available for accurate calculations
+      const fromDecimals =
+        fromTokenDetails?.decimals || fromToken?.decimals || 9;
+
       const params: JupiterOrderRequest = {
-        inputMint: fromToken.tokenAddress,
-        outputMint: toToken.tokenAddress,
-        amount: parseFloat(amount) * 10 ** fromToken.decimals,
+        inputMint: fromToken.address,
+        outputMint: toToken.address,
+        amount: parseFloat(amount) * Math.pow(10, fromDecimals),
         taker: privyWalletAddress,
       };
 
       const response = await jupiterRequests.getOrder(params);
       if (!response.success || !response.data) {
-        console.log('Quote response:', response.data);
         throw new Error(response.message || 'Failed to get swap quote');
       }
-      console.log('Quote response:', response.data);
 
       setQuoteResponse(response.data);
       return response.data;
@@ -141,9 +169,6 @@ export default function SwapModal() {
     staleTime: 15000, // 15 seconds
     refetchInterval: false,
   });
-
-  // Define a Solana connection object for use with Privy
-  const connection = new Connection('https://api.mainnet-beta.solana.com');
 
   // Execute swap transaction
   const executeSwap = async () => {
@@ -208,15 +233,59 @@ export default function SwapModal() {
   const getOutputAmount = () => {
     if (!quote) return '0';
 
-    const outAmount = parseFloat(quote.outAmount) / 10 ** toToken.decimals;
+    // Use token details decimals if available, fallback to token.decimals or default 9
+    const decimals = toTokenDetails?.decimals || toToken?.decimals || 9;
+
+    const outAmount = parseFloat(quote.outAmount) / Math.pow(10, decimals);
     return outAmount.toLocaleString('en-US', { maximumFractionDigits: 6 });
   };
 
   // Calculate price impact
   const getPriceImpact = (): number => {
-    if (!quote) return 0;
-    return parseFloat(quote.priceImpactPct) * 100;
+    if (!quote || !quote.priceImpactPct) return 0;
+    return parseFloat(quote.priceImpactPct);
   };
+
+  // Fetch detailed token info with accurate decimals only when decimals aren't available
+  const fetchTokenDetails = async (token: TokenItem, isFromToken: boolean) => {
+    if (!token?.address) return;
+
+    // Skip fetching if decimals are already available
+    if (token.decimals !== undefined) {
+      return;
+    }
+
+    setFetchingTokenDetails(true);
+    try {
+      const response = await birdEyeRequests.tokenOverview(token.address, {});
+
+      if (response.success && response.data?.tokenOverview) {
+        if (isFromToken) {
+          setFromTokenDetails(response.data.tokenOverview);
+        } else {
+          setToTokenDetails(response.data.tokenOverview);
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching token details for ${token.symbol}:`, error);
+    } finally {
+      setFetchingTokenDetails(false);
+    }
+  };
+
+  // Refetch quote when token details are updated to ensure accurate decimals are used
+  useEffect(() => {
+    if (
+      (fromTokenDetails || toTokenDetails) &&
+      fromToken &&
+      toToken &&
+      amount &&
+      parseFloat(amount) > 0
+    ) {
+      console.log('Token details updated, refetching quote');
+      refetchQuote();
+    }
+  }, [fromTokenDetails, toTokenDetails]);
 
   // Reverse tokens
   const handleReverseTokens = () => {
@@ -237,8 +306,8 @@ export default function SwapModal() {
 
   // Set the maximum available amount for the selected token
   const handleMaxAmount = () => {
-    if (fromToken && fromToken.uiAmount) {
-      setAmount(fromToken.uiAmount.toString());
+    if (fromToken && (fromToken as any).uiAmount) {
+      setAmount((fromToken as any).uiAmount.toString());
     }
   };
 
@@ -252,39 +321,6 @@ export default function SwapModal() {
     setIsConfirmView(true);
     setQuoteResponse(quote);
   };
-
-  // Render the token selector
-  const TokenSelector = ({ token, label, onPress }: any) => (
-    <TouchableOpacity
-      className="flex-row items-center bg-dark-200 rounded-xl p-3 justify-between"
-      onPress={onPress}
-    >
-      <View className="flex-row items-center">
-        <View className="w-10 h-10 rounded-full overflow-hidden bg-dark-300 justify-center items-center">
-          {token?.logoURI ? (
-            <Image
-              source={{ uri: token.logoURI }}
-              className="w-8 h-8 rounded-full"
-              resizeMode="cover"
-            />
-          ) : (
-            <Ionicons name="help-circle" size={24} color="#666" />
-          )}
-        </View>
-        <View className="ml-3">
-          <Text className="text-white font-semibold text-lg">
-            {token?.symbol || `Select ${label}`}
-          </Text>
-          {token && (
-            <Text className="text-gray-400 text-sm">
-              Balance: {formatBalance(token)}
-            </Text>
-          )}
-        </View>
-      </View>
-      <Ionicons name="chevron-down" size={20} color="#666" />
-    </TouchableOpacity>
-  );
 
   // If in confirm view, show the confirmation screen
   if (isConfirmView && quote) {
@@ -310,14 +346,20 @@ export default function SwapModal() {
             {/* From Token */}
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-row items-center">
-                <Image
-                  source={{ uri: fromToken.logoURI }}
-                  className="w-10 h-10 rounded-full"
-                  resizeMode="cover"
-                />
-                <Text className="text-white text-lg font-semibold ml-3">
-                  {fromToken.symbol}
-                </Text>
+                {fromToken?.logoURI ? (
+                  <Image
+                    source={{ uri: fromToken.logoURI }}
+                    className="w-10 h-10 rounded-full"
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View className="w-10 h-10 rounded-full bg-gray-400" />
+                )}
+                {fromToken && (
+                  <Text className="text-white text-lg font-semibold ml-3">
+                    {fromToken.symbol}
+                  </Text>
+                )}
               </View>
               <Text className="text-white text-lg font-semibold">
                 {parseFloat(amount).toLocaleString('en-US', {
@@ -334,14 +376,18 @@ export default function SwapModal() {
             {/* To Token */}
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
-                <Image
-                  source={{ uri: toToken.logoURI }}
-                  className="w-10 h-10 rounded-full"
-                  resizeMode="cover"
-                />
-                <Text className="text-white text-lg font-semibold ml-3">
-                  {toToken.symbol}
-                </Text>
+                {toToken && (
+                  <Image
+                    source={{ uri: toToken.logoURI }}
+                    className="w-10 h-10 rounded-full"
+                    resizeMode="cover"
+                  />
+                )}
+                {toToken && (
+                  <Text className="text-white text-lg font-semibold ml-3">
+                    {toToken.symbol}
+                  </Text>
+                )}
               </View>
               <Text className="text-white text-lg font-semibold">
                 {getOutputAmount()}
@@ -354,12 +400,19 @@ export default function SwapModal() {
             <View className="flex-row justify-between mb-3">
               <Text className="text-gray-400">Rate</Text>
               <Text className="text-white">
-                1 {fromToken.symbol} ={' '}
-                {(
-                  (parseFloat(quote.outAmount) / parseFloat(quote.inAmount)) *
-                  10 ** (fromToken.decimals - toToken.decimals)
-                ).toFixed(6)}{' '}
-                {toToken.symbol}
+                1 {fromToken?.symbol} ={' '}
+                {
+                  // Calculate the correct rate by adjusting for decimal differences
+                  (
+                    (parseFloat(quote.outAmount) / parseFloat(quote.inAmount)) *
+                    Math.pow(
+                      10,
+                      (fromTokenDetails?.decimals || fromToken?.decimals || 9) -
+                        (toTokenDetails?.decimals || toToken?.decimals || 9)
+                    )
+                  ).toFixed(6)
+                }{' '}
+                {toToken?.symbol}
               </Text>
             </View>
 
@@ -463,17 +516,30 @@ export default function SwapModal() {
 
             <View className="mb-2">
               <TokenSelector
-                token={fromToken}
-                label="From"
-                onPress={() => {
-                  router.push({
-                    pathname: '/token-select',
-                    params: {
-                      selectFor: 'from',
-                      currentValue: fromToken?.tokenAddress,
-                    },
-                  });
+                selectedToken={adaptedFromToken}
+                tokens={
+                  portfolio?.items
+                    ?.map(adaptTokenForSelector)
+                    .filter((token): token is TokenItem => token !== null) || []
+                }
+                onTokenSelect={(token: TokenItem) => {
+                  // Find the original token from portfolio
+                  const originalToken = portfolio?.items?.find(
+                    (item) => item.address === token.address
+                  );
+                  if (originalToken) {
+                    setFromToken(originalToken as TokenItem);
+                  } else {
+                    setFromToken(token);
+                  }
+
+                  // Fetch detailed token info with accurate decimals
+                  fetchTokenDetails(token, true);
                 }}
+                label="From"
+                showLabel={false}
+                showBalance={true}
+                className=""
               />
             </View>
 
@@ -490,17 +556,17 @@ export default function SwapModal() {
                 <TouchableOpacity
                   className="bg-primary-500 px-3 rounded-lg h-8 justify-center"
                   onPress={handleMaxAmount}
-                  disabled={!fromToken || !fromToken.uiAmount}
+                  disabled={!fromToken || !(fromToken as any).uiAmount}
                 >
                   <Text className="text-white font-bold">Max</Text>
                 </TouchableOpacity>
               </View>
-              {fromToken?.priceUsd && amount && (
-                <Text className="text-gray-400 text-sm mt-1">
-                  {formatUSD(parseFloat(amount) * fromToken.priceUsd)}
-                </Text>
-              )}
             </View>
+            {fromToken?.priceUsd && amount && (
+              <Text className="text-gray-400 text-sm mt-1">
+                {formatUSD(parseFloat(amount) * fromToken.priceUsd)}
+              </Text>
+            )}
 
             <View className="items-center my-4">
               <TouchableOpacity
@@ -521,17 +587,25 @@ export default function SwapModal() {
               </View>
 
               <TokenSelector
-                token={toToken}
-                label="To"
-                onPress={() => {
-                  router.push({
-                    pathname: '/token-select',
-                    params: {
-                      selectFor: 'to',
-                      currentValue: toToken?.tokenAddress,
-                    },
-                  });
+                selectedToken={adaptedToToken}
+                onTokenSelect={(token: TokenItem) => {
+                  // Find the original token from portfolio
+                  const originalToken = portfolio?.items?.find(
+                    (item) => item.address === token.address
+                  );
+                  if (originalToken) {
+                    setToToken(originalToken as TokenItem);
+                  } else {
+                    setToToken(token);
+                  }
+
+                  // Fetch detailed token info with accurate decimals
+                  fetchTokenDetails(token, false);
                 }}
+                label="To"
+                showLabel={false}
+                showBalance={true}
+                className=""
               />
             </View>
 
@@ -557,10 +631,17 @@ export default function SwapModal() {
               <Text className="text-gray-400">Rate</Text>
               <Text className="text-white">
                 1 {fromToken.symbol} ≈{' '}
-                {(
-                  (parseFloat(quote.outAmount) / parseFloat(quote.inAmount)) *
-                  10 ** (fromToken.decimals - toToken.decimals)
-                ).toFixed(6)}{' '}
+                {
+                  // Calculate the correct rate by adjusting for decimal differences
+                  (
+                    (parseFloat(quote.outAmount) / parseFloat(quote.inAmount)) *
+                    Math.pow(
+                      10,
+                      (fromTokenDetails?.decimals || fromToken?.decimals || 9) -
+                        (toTokenDetails?.decimals || toToken?.decimals || 9)
+                    )
+                  ).toFixed(6)
+                }{' '}
                 {toToken.symbol}
               </Text>
             </View>

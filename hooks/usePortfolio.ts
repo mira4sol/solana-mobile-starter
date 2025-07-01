@@ -16,7 +16,6 @@ export function usePortfolio() {
   } = usePortfolioStore();
 
   const walletAddress = activeWallet?.address;
-  // const walletAddress = '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9'
 
   const {
     data,

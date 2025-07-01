@@ -89,9 +89,7 @@ export interface BirdEyeSearchItem {
 }
 
 export interface BirdEyeSearchResponse {
-  tokenOverview: {
-    items: BirdEyeSearchItem[];
-  };
+  items: Array<BirdEyeSearchItem>;
 }
 
 export interface BirdEyeWalletBalanceChangeTokenInfo {
