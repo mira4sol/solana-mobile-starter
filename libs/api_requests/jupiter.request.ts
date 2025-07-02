@@ -28,9 +28,8 @@ export const jupiterRequests = {
               : params.outputMint,
           amount: params.amount,
           taker: params.taker,
-          // TODO
-          // referralAccount: '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9',
-          // referralFee: 100,
+          referralAccount: 'HSKt4ztFYEDsTskHxmKqGD4nZjo3qLc5DcFAF3576HtT',
+          referralFee: 100, // In basis points (1%)
         },
       });
 
