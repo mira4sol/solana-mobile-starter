@@ -632,14 +632,30 @@ export default function SendScreen() {
                     setIsUsdMode(!isUsdMode)
                     setAmount('')
                   }}
-                  className='bg-dark-300 px-3 py-1 rounded-lg'
+                  className='bg-dark-300 rounded-2xl flex-row items-center overflow-hidden'
                 >
-                  <Text className='text-white text-sm'>
-                    {isUsdMode ? 'USD' : selectedToken?.symbol || 'TOKEN'}
-                  </Text>
+                  <View
+                    className={`px-4 py-2 ${!isUsdMode ? 'bg-primary-500' : 'bg-transparent'}`}
+                  >
+                    <Text
+                      className={`text-sm ${!isUsdMode ? 'text-white font-medium' : 'text-gray-400'}`}
+                    >
+                      {selectedToken?.symbol || 'TOKEN'}
+                    </Text>
+                  </View>
+                  <View
+                    className={`px-4 py-2 ${isUsdMode ? 'bg-primary-500' : 'bg-transparent'}`}
+                  >
+                    <Text
+                      className={`text-sm ${isUsdMode ? 'text-white font-medium' : 'text-gray-400'}`}
+                    >
+                      USD
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               </View>
             </View>
+            å
             <View className='bg-dark-200 rounded-2xl px-4 py-4 flex-row items-center'>
               <TextInput
                 className='flex-1 text-white text-2xl font-bold'

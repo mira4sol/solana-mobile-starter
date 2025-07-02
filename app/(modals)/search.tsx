@@ -146,7 +146,7 @@ export default function SearchScreen() {
         {/* Price Info */}
         <View className='items-end'>
           <Text className='text-white font-semibold text-lg mb-1'>
-            ${item.price.toFixed(item.price >= 1 ? 2 : 6)}
+            ${item.price?.toFixed(item.price >= 1 ? 2 : 6) || ''}
           </Text>
           <Text
             className={`text-sm font-medium ${
@@ -154,7 +154,7 @@ export default function SearchScreen() {
             }`}
           >
             {item.priceChange24h >= 0 ? '+' : ''}
-            {item.priceChange24h.toFixed(2)}%
+            {item.priceChange24h?.toFixed(2) || ''}%
           </Text>
         </View>
       </View>
