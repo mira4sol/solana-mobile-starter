@@ -4,6 +4,7 @@ import React from 'react'
 import { View } from 'react-native'
 
 import TabBarBackground from '@/components/ui/TabBarBackground'
+import { ENV } from '@/constants/Env'
 import { useColorScheme } from '@/hooks/useColorScheme'
 
 export default function TabLayout() {
@@ -50,6 +51,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name='wallet'
         options={{
@@ -69,6 +71,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name='trading'
         options={{
@@ -88,44 +91,49 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name='social'
-        options={{
-          title: 'Feed',
-          tabBarIcon: ({ color, focused }) => (
-            <View
-              className={`p-1.5 rounded-lg ${
-                focused ? 'bg-primary-500/20' : ''
-              }`}
-            >
-              <Ionicons
-                name={focused ? 'people' : 'people-outline'}
-                size={22}
-                color={color}
-              />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name='profile'
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
-            <View
-              className={`p-1.5 rounded-lg ${
-                focused ? 'bg-primary-500/20' : ''
-              }`}
-            >
-              <Ionicons
-                name={focused ? 'person' : 'person-outline'}
-                size={22}
-                color={color}
-              />
-            </View>
-          ),
-        }}
-      />
+      {ENV.NODE_ENV === 'development' && (
+        <Tabs.Screen
+          name='social'
+          options={{
+            title: 'Feed',
+            tabBarIcon: ({ color, focused }) => (
+              <View
+                className={`p-1.5 rounded-lg ${
+                  focused ? 'bg-primary-500/20' : ''
+                }`}
+              >
+                <Ionicons
+                  name={focused ? 'people' : 'people-outline'}
+                  size={22}
+                  color={color}
+                />
+              </View>
+            ),
+          }}
+        />
+      )}
+
+      {ENV.NODE_ENV === 'development' && (
+        <Tabs.Screen
+          name='profile'
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ color, focused }) => (
+              <View
+                className={`p-1.5 rounded-lg ${
+                  focused ? 'bg-primary-500/20' : ''
+                }`}
+              >
+                <Ionicons
+                  name={focused ? 'person' : 'person-outline'}
+                  size={22}
+                  color={color}
+                />
+              </View>
+            ),
+          }}
+        />
+      )}
     </Tabs>
   )
 }

@@ -1,4 +1,3 @@
-import { Env } from '@/utils/constants/Env'
 import axios, { AxiosInstance } from 'axios'
 import { apiResponse } from '../api.helpers'
 
@@ -6,7 +5,7 @@ const api: AxiosInstance = axios.create({
   baseURL: 'https://api.coingecko.com/api/v3',
   headers: {
     accept: 'application/json',
-    'x-cg-demo-api-key': Env.COINGECKO_API_KEY,
+    // 'x-cg-demo-api-key': Env.COINGECKO_API_KEY,
   },
 })
 

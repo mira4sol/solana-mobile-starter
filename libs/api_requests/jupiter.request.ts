@@ -21,8 +21,8 @@ export const jupiterRequests = {
           outputMint: params.outputMint,
           amount: params.amount,
           taker: params.taker,
-          referralAccount: params.referralAccount,
-          referralFee: params.referralFee,
+          referralAccount: 'HSKt4ztFYEDsTskHxmKqGD4nZjo3qLc5DcFAF3576HtT',
+          referralFee: 100, // In basis points (1%)
         },
       })
 

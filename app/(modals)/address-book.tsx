@@ -1,9 +1,10 @@
+import { useAddressBook } from '@/hooks/useAddressBook'
 import { addressBookRequests } from '@/libs/api_requests/address-book.request'
-import { useAddressBookStore } from '@/store/addressBookStore'
 import { useAuthStore } from '@/store/authStore'
 import { AddressBookEntry } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { formatWalletAddress } from '@privy-io/expo'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import React, { useCallback, useState } from 'react'
 import {
@@ -25,16 +26,17 @@ export default function AddressBookScreen() {
   const {
     entries: addressBook,
     isLoading,
-    loadAddressBook,
-    removeEntry,
-  } = useAddressBookStore()
+    refetch: loadAddressBook,
+    error,
+  } = useAddressBook()
 
   const [searchText, setSearchText] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
-  const { selectMode, onSelect } = useLocalSearchParams<{
+  const { selectMode, onSelect, returnScreen } = useLocalSearchParams<{
     selectMode?: string
     onSelect?: string
+    returnScreen?: string
   }>()
 
   const isSelectionMode = selectMode === 'true'
@@ -54,7 +56,7 @@ export default function AddressBookScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     try {
-      await loadAddressBook(true)
+      await loadAddressBook()
     } catch (error) {
       console.error('Error refreshing address book:', error)
     } finally {
@@ -89,12 +91,9 @@ export default function AddressBookScreen() {
       const response = await addressBookRequests.deleteAddressBookEntry(id)
 
       if (response.success) {
-        // Update the store if API call succeeded
-        removeEntry(id)
-        // Alert with a slight delay to ensure store is updated first
-        setTimeout(() => {
-          Alert.alert('Success', 'Address deleted successfully')
-        }, 100)
+        // Refetch the address book to update the list
+        await loadAddressBook()
+        Alert.alert('Success', 'Address deleted successfully')
       } else {
         Alert.alert('Error', response.message || 'Failed to delete address')
       }
@@ -134,19 +133,15 @@ export default function AddressBookScreen() {
   }
 
   const handleSelectAddress = (entry: AddressBookEntry) => {
-    if (isSelectionMode && onSelect) {
+    if (isSelectionMode) {
       // Return to the previous screen with the selected address
-      router.dismiss()
-
-      // Parse the callback function name and call it
-      try {
-        const callbackFn = JSON.parse(onSelect)
-        if (callbackFn && callbackFn.screen && callbackFn.param) {
-          // Navigate back to the calling screen with the selected address
-          router.setParams({ [callbackFn.param]: entry.address })
-        }
-      } catch (error) {
-        console.error('Error parsing callback:', error)
+      if (returnScreen === 'send') {
+        // Store the selected address temporarily and navigate back
+        AsyncStorage.setItem('tempSelectedAddress', entry.address).then(() => {
+          router.dismiss()
+        })
+      } else {
+        router.dismiss()
       }
     } else {
       handleEditAddress(entry)

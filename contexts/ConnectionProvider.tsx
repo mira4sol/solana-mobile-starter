@@ -18,7 +18,6 @@ export const ConnectionProvider: FC<ConnectionProviderProps> = ({
   config = { commitment: 'confirmed' },
 }) => {
   const { selectedCluster } = useCluster()
-  console.log('selectedCluster', selectedCluster)
 
   const connection = useMemo(
     () => new Connection(selectedCluster.endpoint, config),

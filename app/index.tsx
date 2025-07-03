@@ -1,19 +1,19 @@
-import SeekerHubLogo from '@/components/ui/SeekerHubLogo';
-import { useAppState } from '@/hooks/useAppState';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { useEffect, useRef } from 'react';
-import { Animated, InteractionManager, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import SeekerHubLogo from '@/components/ui/SeekerHubLogo'
+import { useAppState } from '@/hooks/useAppState'
+import { LinearGradient } from 'expo-linear-gradient'
+import { router } from 'expo-router'
+import { useEffect, useRef } from 'react'
+import { Animated, InteractionManager, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Index = () => {
-  const { user, isAuthenticated, isLoading, isReady } = useAppState();
+  const { user, isAuthenticated, isLoading, isReady } = useAppState()
 
   // Animation values
-  const logoScale = useRef(new Animated.Value(1)).current;
-  const dot1Opacity = useRef(new Animated.Value(0.3)).current;
-  const dot2Opacity = useRef(new Animated.Value(0.3)).current;
-  const dot3Opacity = useRef(new Animated.Value(0.3)).current;
+  const logoScale = useRef(new Animated.Value(1)).current
+  const dot1Opacity = useRef(new Animated.Value(0.3)).current
+  const dot2Opacity = useRef(new Animated.Value(0.3)).current
+  const dot3Opacity = useRef(new Animated.Value(0.3)).current
 
   // Logo breathing animation
   useEffect(() => {
@@ -30,11 +30,11 @@ const Index = () => {
           useNativeDriver: true,
         }),
       ])
-    );
-    breathingAnimation.start();
+    )
+    breathingAnimation.start()
 
-    return () => breathingAnimation.stop();
-  }, [logoScale]);
+    return () => breathingAnimation.stop()
+  }, [logoScale])
 
   // Dots animation
   useEffect(() => {
@@ -53,24 +53,24 @@ const Index = () => {
             useNativeDriver: true,
           }),
         ])
-      );
-    };
+      )
+    }
 
     // Start each dot animation with different delays
-    const dot1Animation = createDotAnimation(dot1Opacity, 0);
-    const dot2Animation = createDotAnimation(dot2Opacity, 200);
-    const dot3Animation = createDotAnimation(dot3Opacity, 400);
+    const dot1Animation = createDotAnimation(dot1Opacity, 0)
+    const dot2Animation = createDotAnimation(dot2Opacity, 200)
+    const dot3Animation = createDotAnimation(dot3Opacity, 400)
 
-    dot1Animation.start();
-    dot2Animation.start();
-    dot3Animation.start();
+    dot1Animation.start()
+    dot2Animation.start()
+    dot3Animation.start()
 
     return () => {
-      dot1Animation.stop();
-      dot2Animation.stop();
-      dot3Animation.stop();
-    };
-  }, [dot1Opacity, dot2Opacity, dot3Opacity]);
+      dot1Animation.stop()
+      dot2Animation.stop()
+      dot3Animation.stop()
+    }
+  }, [dot1Opacity, dot2Opacity, dot3Opacity])
 
   useEffect(() => {
     console.log('Auth state from useAppState:', {
@@ -79,7 +79,7 @@ const Index = () => {
       isReady,
       isLoading,
       userId: user?.id,
-    });
+    })
 
     // Only navigate when we're not loading
     // This handles both online (Privy ready) and offline (cached data) scenarios
@@ -88,26 +88,26 @@ const Index = () => {
       InteractionManager.runAfterInteractions(() => {
         if (isAuthenticated && user) {
           // User is authenticated (either from Privy or cached), go to main app
-          console.log('User authenticated, navigating to main app');
-          router.replace('/(tabs)');
+          console.log('User authenticated, navigating to main app')
+          router.replace('/(tabs)')
         } else {
           // User is not authenticated, go to auth flow
-          console.log('User not authenticated, staying in auth flow');
-          router.replace('/(auth)');
+          console.log('User not authenticated, staying in auth flow')
+          router.replace('/(auth)')
         }
-      });
+      })
     }
-  }, [user, isAuthenticated, isLoading]);
+  }, [user, isAuthenticated, isLoading])
 
   // Creative Loading Component
   const CreativeLoader = () => (
-    <View className="items-center gap-8">
+    <View className='items-center gap-8'>
       <Animated.View style={{ transform: [{ scale: logoScale }] }}>
         <SeekerHubLogo size={120} />
       </Animated.View>
 
       {/* Animated dots */}
-      <View className="flex-row gap-3">
+      <View className='flex-row gap-3'>
         <Animated.View
           style={{
             opacity: dot1Opacity,
@@ -137,25 +137,25 @@ const Index = () => {
         />
       </View>
     </View>
-  );
+  )
 
   // Show loading screen while determining auth state
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-dark-50">
+      <SafeAreaView className='flex-1 bg-dark-50'>
         <LinearGradient
           colors={['#0a0a0b', '#1a1a1f', '#0a0a0b']}
           style={{ flex: 1 }}
         >
-          <View className="flex-1 justify-center items-center">
+          <View className='flex-1 justify-center items-center'>
             <CreativeLoader />
           </View>
         </LinearGradient>
       </SafeAreaView>
-    );
+    )
   }
 
-  return <View></View>;
-};
+  return <View></View>
+}
 
-export default Index;
+export default Index

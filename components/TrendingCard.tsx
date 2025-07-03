@@ -70,7 +70,7 @@ export function TrendingCard({ token, onPress }: TrendingCardProps) {
       <Text className='text-white font-bold text-lg mb-1'>
         {formatPrice(token.price)}
       </Text>
-      <View className='flex-row justify-between'>
+      <View className='flex-row justify-between items-center'>
         <Text
           className={`text-sm font-medium ${
             (token.price24hChangePercent || 0) >= 0
@@ -81,7 +81,7 @@ export function TrendingCard({ token, onPress }: TrendingCardProps) {
           {formatPriceChange(token.price24hChangePercent)}
         </Text>
         <Text className='text-gray-400 text-xs'>
-          {formatValue(token.volume24hUSD)}
+          {formatValue(token.marketcap || 0) + ' MC'}
         </Text>
       </View>
     </TouchableOpacity>

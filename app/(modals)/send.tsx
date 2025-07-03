@@ -1,9 +1,10 @@
-import ContactCard from '@/components/ContactCard'
+import RecentContacts from '@/components/RecentContacts'
 import SendTokenSelector from '@/components/SendTokenSelector'
 import CustomButton from '@/components/ui/CustomButton'
 import { blurHashPlaceholder } from '@/constants/App'
 import { ENV } from '@/constants/Env'
 import { useConnection } from '@/contexts/ConnectionProvider'
+import { useAddressBook } from '@/hooks/useAddressBook'
 import { usePortfolio } from '@/hooks/usePortfolio'
 import { usePrivySign } from '@/hooks/usePrivySign'
 import {
@@ -18,6 +19,7 @@ import { useAuthStore } from '@/store/authStore'
 import { BirdEyeTokenItem } from '@/types'
 import { Ionicons } from '@expo/vector-icons'
 import { useEmbeddedSolanaWallet, usePrivy } from '@privy-io/expo'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   Connection,
   LAMPORTS_PER_SOL,
@@ -25,8 +27,8 @@ import {
   Transaction,
 } from '@solana/web3.js'
 import { Image } from 'expo-image'
-import { router } from 'expo-router'
-import React, { useEffect, useMemo, useState } from 'react'
+import { router, useFocusEffect } from 'expo-router'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -40,30 +42,18 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-const recentContacts = [
-  {
-    name: 'Mira',
-    address: 'D1S6VGp1nXLeyMjsjs7H9GRcZtLgvfCc72ZHFzzhB692',
-    avatar: '👨',
-  },
-  {
-    name: 'Aaliyah',
-    address: '5QDwYS1CtHzN1oJ2eij8Crka4D2eJcUavMcyuvwNRM9',
-    avatar: '👩',
-  },
-  {
-    name: 'Sammy',
-    address: '5SEZmBS8s41cJ8g3gmLS1BexujHcNZHe5qznPJMdVUsh',
-    avatar: '👩‍🦰',
-  },
-]
-
 export default function SendScreen() {
   const {
     portfolio,
     isLoading: portfolioLoading,
     isRefetching,
   } = usePortfolio()
+  const {
+    entries: addressBookEntries,
+    isLoading: addressBookLoading,
+    refetch: refetchAddressBook,
+    error: addressBookError,
+  } = useAddressBook()
   const { activeWallet } = useAuthStore()
   const { user } = usePrivy()
   const { wallets } = useEmbeddedSolanaWallet()
@@ -95,6 +85,11 @@ export default function SendScreen() {
       wallets: wallets?.length || 0,
     })
   }, [user, activeWallet, wallets])
+
+  // Refetch address book when screen loads
+  useEffect(() => {
+    refetchAddressBook()
+  }, [])
 
   // Get available tokens from portfolio
   const availableTokens = useMemo(() => {
@@ -138,6 +133,28 @@ export default function SendScreen() {
 
     return () => clearTimeout(timeoutId)
   }, [recipient])
+
+  // Check for temporarily stored address from address book
+  useFocusEffect(
+    useCallback(() => {
+      const checkStoredAddress = async () => {
+        try {
+          const storedAddress = await AsyncStorage.getItem(
+            'tempSelectedAddress'
+          )
+          if (storedAddress) {
+            setRecipient(storedAddress)
+            // Clear the stored address after using it
+            await AsyncStorage.removeItem('tempSelectedAddress')
+          }
+        } catch (error) {
+          console.error('Error checking stored address:', error)
+        }
+      }
+
+      checkStoredAddress()
+    }, [])
+  )
 
   const formatBalance = (balance: number, decimals: number = 9) => {
     return balance / Math.pow(10, decimals)
@@ -335,6 +352,8 @@ export default function SendScreen() {
       Alert.alert('Error', 'Missing required transaction data')
       return
     }
+
+    console.log('wallets', wallets)
 
     if (!wallets || wallets.length === 0) {
       Alert.alert('Error', 'No wallet available for signing transactions')
@@ -561,22 +580,13 @@ export default function SendScreen() {
           />
 
           {/* Recent Contacts */}
-          <View className='mb-6'>
-            <Text className='text-white text-lg font-semibold mb-4'>
-              Recent
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className='flex-row'>
-                {recentContacts.map((contact, index) => (
-                  <ContactCard
-                    key={index}
-                    contact={contact}
-                    onPress={setRecipient}
-                  />
-                ))}
-              </View>
-            </ScrollView>
-          </View>
+          <RecentContacts
+            contacts={addressBookEntries}
+            onContactPress={setRecipient}
+            isLoading={addressBookLoading}
+            error={addressBookError}
+            onRefresh={refetchAddressBook}
+          />
 
           {/* Recipient */}
           <View className='mb-6'>
